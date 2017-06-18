@@ -1,0 +1,11 @@
+* {
+    font-family: "Open Sans","lucida grande","Segoe UI",arial,verdana,"lucida sans unicode",tahoma,sans-serif!important;
+    letter-spacing: .3px;
+    color: #47525d;
+    font-weight: 100;
+}
+
+body {
+    background: #f6f9fc;
+    margin: 0;
+}

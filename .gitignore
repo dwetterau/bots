@@ -1,0 +1,11 @@
+*.sqlite3
+virtualenv/
+node_modules/
+.idea/
+*.pyc
+site.db
+*.log
+.DS_Store
+bots/static/dist/dev
+.mypy_cache
+index.txt
