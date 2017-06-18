@@ -4,9 +4,14 @@ import {Vector} from "../vector";
 export class Disc extends WorldObject {
     radius: number = 0;
 
-    constructor(p: Vector, v: Vector, m: number, r: number) {
-        super(p, v, m);
+    constructor(p: Vector, m: number, r: number) {
+        super(p, m);
         this.radius = r;
+    }
+
+    momentOfInertia(): number {
+        // The moment of inertia for a thin disc is: MR^2 / 2
+        return this.mass * (this.radius * this.radius) / 2;
     }
 
     drawSelf(ctx: CanvasRenderingContext2D, renderingInfo: RenderingInfo) {
@@ -22,11 +27,29 @@ export class Disc extends WorldObject {
         );
         radiusHeight = Math.round(radiusHeight);
 
-        ctx.arc(x + radiusHeight, y + radiusHeight, radiusHeight, 0, Math.PI * 2, false);
+        ctx.arc(
+            x + radiusHeight,
+            y + radiusHeight,
+            radiusHeight,
+            this.rotation, // startAngle
+            (this.rotation + (Math.PI * 2 - .2)) % (Math.PI * 2),  // endAngle
+            false,  // anticlockwise
+        );
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#000";
         ctx.stroke();
         ctx.closePath();
+    }
+
+    translateRealWorldPoint(realWorldPoint: Vector): Vector {
+        return new Vector(
+            realWorldPoint.a - this.position.a,
+            realWorldPoint.b - this.position.b,
+        );
+    }
+
+    isInside(p: Vector): boolean {
+        return p.magnitude() <= this.radius;
     }
 }

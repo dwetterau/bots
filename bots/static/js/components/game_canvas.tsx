@@ -59,6 +59,14 @@ export class GameCanvas extends React.Component<{}, {}> {
         for (let object of this.simulation.objects) {
             object.drawSelf(this.ctx, renderingInfo);
         }
+
+        // Draw stats
+        this.ctx.fillStyle = "#000000";
+        let y = 10;
+        for (let stats of this.simulation.stats()) {
+            this.ctx.fillText(stats, 10, y);
+            y += 10;
+        }
     }
 
     render() {

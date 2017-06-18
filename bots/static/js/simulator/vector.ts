@@ -16,6 +16,10 @@ export class Vector {
         return this.a * v.a + this.b * v.b;
     }
 
+    cross(v: Vector): number {
+        return this.a * v.b - this.b * v.a;
+    }
+
     proj(v: Vector): Vector {
         let fraction = this.dot(v);
         return new Vector(v.a * fraction, v.b * fraction);
