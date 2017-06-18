@@ -1,5 +1,6 @@
 import * as React from "react";
 import {World} from "../simulator/world";
+import {RenderingInfo} from "../simulator/world_object";
 
 export class GameCanvas extends React.Component<{}, {}> {
     ctx: CanvasRenderingContext2D = null;
@@ -47,25 +48,16 @@ export class GameCanvas extends React.Component<{}, {}> {
         // Update the world
         this.simulation.moveObjects(this.DRAW_INTERVAL);
 
+        // Package up the rendering info
+        const renderingInfo: RenderingInfo = {
+            heightToGridHeight: this.heightToGridHeight,
+            widthToGridWidth: this.widthToGridWidth,
+            height: this.height,
+        };
+
         // Draw each object
         for (let object of this.simulation.objects) {
-            this.ctx.beginPath();
-            this.ctx.fillStyle = object.color;
-
-            // note: 5 is the radius
-            let radiusHeight = Math.round(5) * this.heightToGridHeight;
-            let x = Math.round(object.position.a * this.widthToGridWidth) - radiusHeight;
-            let y = Math.round(
-                this.height - (object.position.b * this.heightToGridHeight) - radiusHeight
-            );
-            radiusHeight = Math.round(radiusHeight);
-
-            this.ctx.arc(x + radiusHeight, y + radiusHeight, radiusHeight, 0, Math.PI * 2, false);
-            this.ctx.fill();
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = "#000";
-            this.ctx.stroke();
-            this.ctx.closePath();
+            object.drawSelf(this.ctx, renderingInfo);
         }
     }
 

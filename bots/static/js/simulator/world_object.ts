@@ -1,17 +1,24 @@
 import {Vector} from "./vector";
+
+export interface RenderingInfo {
+    heightToGridHeight: number
+    widthToGridWidth: number
+    height: number
+}
+
 export class WorldObject {
 
     position: Vector;
     velocity: Vector;
     acceleration: Vector;
-    // TODO(davidw): Move this to a constant / make it configurable
-    mass: number = 10;
+    mass: number = 0;
     color: string;
 
-    constructor(p: Vector, v: Vector) {
+    constructor(p: Vector, v: Vector, m: number) {
         this.position = p;
         this.velocity = v;
         this.acceleration = new Vector(0, 0);
+        this.mass = m;
 
         this.color = getRandomColor()
     }
@@ -26,6 +33,10 @@ export class WorldObject {
 
     setGravity(g: Vector) {
         this.acceleration = g.scale(this.mass);
+    }
+
+    drawSelf(ctx: CanvasRenderingContext2D, renderingInfo: RenderingInfo) {
+        throw Error("Abstract method, subclasses must implement.")
     }
 }
 

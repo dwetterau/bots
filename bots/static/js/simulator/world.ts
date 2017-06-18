@@ -1,5 +1,6 @@
 import {WorldObject} from "./world_object";
 import {Vector} from "./vector";
+import {Disc} from "./objects/disc";
 
 export class World {
 
@@ -17,10 +18,12 @@ export class World {
     constructor(widthToHeightRatio: number) {
         this.width = Math.round(100 * widthToHeightRatio);
 
-        // Make an object for now
-        this.objects.push(new WorldObject(
+        // Make a simple disc for now
+        this.objects.push(new Disc(
             new Vector(50, 50),
             new Vector(4, 12),
+            10, // mass
+            5,  // radius
         ))
     }
 
@@ -31,9 +34,9 @@ export class World {
         // TODO: Collisions with walls and other objects
 
         for (let object of this.objects) {
-            object.updatePosition(dt);
-            object.updateVelocity(dt);
             object.setGravity(gravity);
+            object.updateVelocity(dt);
+            object.updatePosition(dt);
         }
     }
 }
