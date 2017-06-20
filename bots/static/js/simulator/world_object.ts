@@ -41,6 +41,8 @@ export class WorldObject {
     }
 
     accumulateForce(f: Vector, realWorldPoint: Vector) {
+        // TODO(davidw): Think about this more, I think we only want to add some
+        // component of the force (the portion that goes through the center of mass?)
         this.forceAccumulator.add(f);
 
         // Translate the realWorldPoint into a local point
@@ -67,8 +69,7 @@ export class WorldObject {
     }
 
     setAngularAcceleration() {
-        // TODO(davidw): Figure out why this is flipped...
-        this.angularAcceleration = -this.torqueAccumulator / this.momentOfInertia();
+        this.angularAcceleration = this.torqueAccumulator / this.momentOfInertia();
     }
 
     updateAngularVelocity(dt: number) {

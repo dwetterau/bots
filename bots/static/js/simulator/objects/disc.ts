@@ -27,12 +27,23 @@ export class Disc extends WorldObject {
         );
         radiusHeight = Math.round(radiusHeight);
 
+        let clampRotation = function(r: number) {
+            if (r < 0) {
+                r += 2 * Math.PI
+            } else if (r > 2 * Math.PI) {
+                r -= 2 * Math.PI
+            }
+            return r
+        };
+        let start = clampRotation(Math.PI * 2 - this.rotation);
+        let end = clampRotation(start + Math.PI * 2 - .2);
+
         ctx.arc(
             x + radiusHeight,
             y + radiusHeight,
             radiusHeight,
-            this.rotation, // startAngle
-            (this.rotation + (Math.PI * 2 - .2)) % (Math.PI * 2),  // endAngle
+            start,
+            end,
             false,  // anticlockwise
         );
         ctx.fill();
