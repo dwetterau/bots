@@ -1,6 +1,7 @@
 import {WorldObject} from "./world_object";
 import {Vector} from "./vector";
 import {Disc} from "./objects/disc";
+import {ContactGenerator} from "./collisions/contact_generator";
 
 export class World {
 
@@ -15,8 +16,14 @@ export class World {
     gravityDirection: Vector = new Vector(0, -1);
     objects: Array<WorldObject> = [];
 
-    constructor(widthToHeightRatio: number) {
-        this.width = Math.round(100 * widthToHeightRatio);
+    // Internal components
+    contactGenerator: ContactGenerator;
+
+    constructor(height: number, width:number) {
+        this.height = height;
+        this.width = width;
+
+        this.contactGenerator = new ContactGenerator(this);
 
         // Make a simple disc for now
         this.objects.push(new Disc(
@@ -24,7 +31,13 @@ export class World {
             10, // mass
             5,  // radius
         ));
+        this.objects.push(new Disc(
+            new Vector(90, 50),
+            20, // mass
+            10, // radius
+        ));
         this.objects[0].velocity = new Vector(4, 12);
+        this.objects[1].velocity = new Vector(-10, 12);
     }
 
     moveObjects(timestep: number) {
@@ -50,6 +63,12 @@ export class World {
             object.setAngularAcceleration();
             object.updateAngularVelocity(dt);
             object.updateRotation(dt);
+        }
+
+        let contacts = this.contactGenerator.detectContacts();
+        // TODO: Pass these into a Contact Resolver component
+        for (let contact of contacts) {
+            console.log(contact);
         }
     }
 

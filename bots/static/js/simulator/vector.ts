@@ -7,9 +7,18 @@ export class Vector {
         this.b = dy;
     }
 
+    copy(): Vector {
+        return new Vector(this.a, this.b);
+    }
+
     add(v: Vector): void {
         this.a += v.a;
         this.b += v.b;
+    }
+
+    sub(v: Vector):  void{
+        this.a -= v.a;
+        this.b -= v.b;
     }
 
     dot(v: Vector): number {

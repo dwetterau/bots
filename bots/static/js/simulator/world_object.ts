@@ -1,8 +1,7 @@
 import {Vector} from "./vector";
 
 export interface RenderingInfo {
-    heightToGridHeight: number
-    widthToGridWidth: number
+    canvasToGridRatio: number
     height: number
 }
 

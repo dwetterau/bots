@@ -13,8 +13,7 @@ export class GameCanvas extends React.Component<{}, {}> {
     simulation: World = null;
     width: number = 0;
     height: number = 0;
-    widthToGridWidth: number = 0;
-    heightToGridHeight: number = 0;
+    canvasToGridRatio: number = 0;
 
     componentDidMount() {
         let canvas = this.refs['game_canvas'] as HTMLCanvasElement;
@@ -24,11 +23,12 @@ export class GameCanvas extends React.Component<{}, {}> {
 
         canvas.style.width = this.width + 'px';
         canvas.style.height = this.height + 'px';
-        this.widthToGridWidth = this.width / 100.0;
-        this.heightToGridHeight = this.height / 100.0;
+
+        let gridWidth = Math.round(100 * canvas.width / canvas.height);
+        this.canvasToGridRatio = this.height / 100;
 
         this.intervalID = setInterval(this.draw.bind(this), this.DRAW_INTERVAL);
-        this.simulation = new World(canvas.width / canvas.height);
+        this.simulation = new World(100, gridWidth);
     }
 
     componentWillUnmount() {
@@ -50,8 +50,7 @@ export class GameCanvas extends React.Component<{}, {}> {
 
         // Package up the rendering info
         const renderingInfo: RenderingInfo = {
-            heightToGridHeight: this.heightToGridHeight,
-            widthToGridWidth: this.widthToGridWidth,
+            canvasToGridRatio: this.canvasToGridRatio,
             height: this.height,
         };
 

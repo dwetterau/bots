@@ -18,11 +18,11 @@ export class Disc extends WorldObject {
         ctx.beginPath();
         ctx.fillStyle = this.color;
 
-        let radiusHeight = this.radius * renderingInfo.heightToGridHeight;
-        let x = Math.round(this.position.a * renderingInfo.widthToGridWidth) - radiusHeight;
+        let radiusHeight = this.radius * renderingInfo.canvasToGridRatio;
+        let x = Math.round(this.position.a * renderingInfo.canvasToGridRatio) - radiusHeight;
         let y = Math.round(
             renderingInfo.height
-            - (this.position.b * renderingInfo.heightToGridHeight)
+            - (this.position.b * renderingInfo.canvasToGridRatio)
             - radiusHeight
         );
         radiusHeight = Math.round(radiusHeight);
