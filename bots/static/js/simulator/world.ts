@@ -2,13 +2,16 @@ import {WorldObject} from "./world_object";
 import {Vector} from "./vector";
 import {Disc} from "./objects/disc";
 import {ContactGenerator} from "./collisions/contact_generator";
+import {ContactResolver} from "./collisions/contact_resolver";
 
 export class World {
 
     // Universal constants
     Gravity = 10;
     Restitution = .8;
-    Tolerance = .01;
+    Tolerance = .005;
+    VelocityLimit = .25;
+    AngularLimit = .2;
 
     // World info
     height: number = 100;
@@ -18,12 +21,14 @@ export class World {
 
     // Internal components
     contactGenerator: ContactGenerator;
+    contactResolver: ContactResolver;
 
     constructor(height: number, width:number) {
         this.height = height;
         this.width = width;
 
         this.contactGenerator = new ContactGenerator(this);
+        this.contactResolver = new ContactResolver(this);
 
         // Make a simple disc for now
         this.objects.push(new Disc(
@@ -66,10 +71,7 @@ export class World {
         }
 
         let contacts = this.contactGenerator.detectContacts();
-        // TODO: Pass these into a Contact Resolver component
-        for (let contact of contacts) {
-            console.log(contact);
-        }
+        this.contactResolver.resolve(contacts, dt);
     }
 
     stats(): Array<string> {

@@ -1,4 +1,5 @@
 import {Vector} from "./vector";
+import {Matrix} from "./matrix";
 
 export interface RenderingInfo {
     canvasToGridRatio: number
@@ -64,7 +65,7 @@ export class WorldObject {
 
     setAcceleration() {
         // a = F/m.
-        this.acceleration = this.forceAccumulator.scale(1 / this.mass);
+        this.acceleration = this.forceAccumulator.scale(this.inverseMass());
     }
 
     setAngularAcceleration() {
@@ -76,13 +77,36 @@ export class WorldObject {
     }
 
     updateRotation(dt: number) {
-        this.rotation += this.angularVelocity * dt;
+        this.setRotation(this.rotation + this.angularVelocity * dt);
+    }
+
+    setRotation(newRotation: number) {
+        this.rotation = newRotation;
+
         // Clamp the rotation in radians
         if (this.rotation < 0) {
             this.rotation += Math.PI * 2;
         } else if (this.rotation > Math.PI * 2) {
             this.rotation -= Math.PI * 2;
         }
+    }
+
+    velocityAtPoint(localPoint: Vector): Vector {
+        let v = this.velocity.copy();
+
+        // Now add in the angular component
+        let tangent = new Vector(
+            -localPoint.b,
+            localPoint.a,
+        );
+        tangent.scaleInPlace(this.angularVelocity);
+        v.add(tangent);
+        return v;
+    }
+
+    inverseMass(): number {
+        // TODO: Support infinite mass
+        return 1 / this.mass;
     }
 
     drawSelf(ctx: CanvasRenderingContext2D, renderingInfo: RenderingInfo) {
