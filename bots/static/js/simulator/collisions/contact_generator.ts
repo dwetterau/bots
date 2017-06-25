@@ -3,6 +3,8 @@ import {World} from "../world";
 import {WorldObject} from "../world_object";
 import {Disc} from "../objects/disc";
 import {discToDiscContact} from "./disc_contact";
+import {Plane} from "../objects/plane";
+import {planeToDiscContact} from "./plane_contact";
 
 export interface Contact {
     data: ContactData
@@ -44,11 +46,33 @@ export class ContactGenerator {
         return contacts;
     }
 
+    flip(contactData: ContactData | null): ContactData | null {
+        if (contactData == null) {
+            return null
+        }
+        contactData.contactNormal.reverse();
+        return contactData
+    }
+
     computeContactData(o1: WorldObject, o2: WorldObject): ContactData | null {
-        // TODO: Flip these around as needed to make things easy
         if (o1 instanceof Disc) {
             if (o2 instanceof Disc) {
                 return discToDiscContact(o1, o2);
+            }
+
+            if (o2 instanceof Plane) {
+                return this.flip(planeToDiscContact(o2, o1));
+            }
+        }
+
+        if (o1 instanceof Plane) {
+            if (o2 instanceof Disc) {
+                return planeToDiscContact(o1, o2);
+            }
+
+            // We don't allow Plane/Plane collisions
+            if (o2 instanceof Plane) {
+                return null
             }
         }
 

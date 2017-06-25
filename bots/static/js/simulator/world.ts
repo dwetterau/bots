@@ -3,11 +3,12 @@ import {Vector} from "./vector";
 import {Disc} from "./objects/disc";
 import {ContactGenerator} from "./collisions/contact_generator";
 import {ContactResolver} from "./collisions/contact_resolver";
+import {Plane} from "./objects/plane";
 
 export class World {
 
     // Universal constants
-    Gravity = 10;
+    Gravity = 20;
     Restitution = .8;
     Tolerance = .005;
     VelocityLimit = .25;
@@ -37,9 +38,33 @@ export class World {
             5,  // radius
         ));
         this.objects.push(new Disc(
-            new Vector(90, 50),
+            new Vector(89, 50),
             20, // mass
             10, // radius
+        ));
+        // Bottom wall
+        this.objects.push(new Plane(
+            new Vector(50, 0),
+            new Vector(0, 1),
+            50,
+        ));
+        // Right wall
+        this.objects.push(new Plane(
+            new Vector(100, 50),
+            new Vector(-1, 0),
+            50,
+        ));
+        // Left wall
+        this.objects.push(new Plane(
+            new Vector(0, 50),
+            new Vector(1, 0),
+            50,
+        ));
+        // Top wall
+        this.objects.push(new Plane(
+            new Vector(50, 100),
+            new Vector(0, -1),
+            50,
         ));
         this.objects[0].velocity = new Vector(4, 12);
         this.objects[1].velocity = new Vector(-10, 12);
@@ -60,7 +85,10 @@ export class World {
                 object.accumulateForce(new Vector(0, 10 * 1000), new Vector(55, 50));
             }
 
-            object.accumulateForce(gravity.scale(object.mass), object.position);
+            if (object.mass != Infinity) {
+                // Only apply gravity if the object has non-infinite mass
+                object.accumulateForce(gravity.scale(object.mass), object.position);
+            }
             object.setAcceleration();
             object.updateVelocity(dt);
             object.updatePosition(dt);
@@ -77,6 +105,9 @@ export class World {
     stats(): Array<string> {
         let stats = ["fps: TODO"];
         for (let object of this.objects) {
+            if (object instanceof Plane) {
+                continue
+            }
             stats.push(
                 `p: (${object.position.a.toFixed(2)}, ` +
                 `${object.position.b.toFixed(2)}) ` +

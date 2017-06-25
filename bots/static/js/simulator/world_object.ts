@@ -105,7 +105,6 @@ export class WorldObject {
     }
 
     inverseMass(): number {
-        // TODO: Support infinite mass
         return 1 / this.mass;
     }
 
