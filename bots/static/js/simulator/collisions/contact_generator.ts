@@ -32,8 +32,7 @@ export class ContactGenerator {
         for (let i = 0; i < this.world.objects.length; i++) {
             let o1 = this.world.objects[i];
             for (let j = i + 1; j < this.world.objects.length; j++) {
-                let contact = this.computeContactData(o1, this.world.objects[j]);
-                if (contact != null) {
+                for (let contact of this.computeContactData(o1, this.world.objects[j])) {
                     contacts.push({
                         data: contact,
                         object1Index: i,
@@ -46,36 +45,43 @@ export class ContactGenerator {
         return contacts;
     }
 
-    flip(contactData: ContactData | null): ContactData | null {
-        if (contactData == null) {
-            return null
-        }
-        contactData.contactNormal.reverse();
-        return contactData
+    flip(
+        f: (o1: WorldObject, o2: WorldObject) => Array<ContactData>,
+    ): (o1: WorldObject, o2: WorldObject) => Array<ContactData> {
+
+        return (o1: WorldObject, o2: WorldObject) => {
+            let contactData = f(o2, o1);
+            for (let c of contactData) {
+                c.contactNormal.reverse();
+            }
+            return contactData
+        };
     }
 
-    computeContactData(o1: WorldObject, o2: WorldObject): ContactData | null {
-        if (o1 instanceof Disc) {
-            if (o2 instanceof Disc) {
-                return discToDiscContact(o1, o2);
-            }
+    computeContactData(o1: WorldObject, o2: WorldObject): Array<ContactData> {
+        let typePairs = [
+            [Disc, Disc],
+            [Disc, Plane],
+            [Plane, Disc],
+            [Plane, Plane],
+        ];
+        let nullGenerator = (o1: WorldObject, o2: WorldObject): Array<ContactData> => {
+            return [];
+        };
 
-            if (o2 instanceof Plane) {
-                return this.flip(planeToDiscContact(o2, o1));
+        let generators = [
+            discToDiscContact,
+            this.flip(planeToDiscContact),
+            planeToDiscContact,
+            nullGenerator,
+        ];
+
+        for (let [i, [type1, type2]] of typePairs.entries()) {
+            if (o1 instanceof type1 && o2 instanceof type2) {
+                return generators[i](o1, o2)
             }
         }
-
-        if (o1 instanceof Plane) {
-            if (o2 instanceof Disc) {
-                return planeToDiscContact(o1, o2);
-            }
-
-            // We don't allow Plane/Plane collisions
-            if (o2 instanceof Plane) {
-                return null
-            }
-        }
-
+        
         throw Error("Missing object type handling")
     }
 }
