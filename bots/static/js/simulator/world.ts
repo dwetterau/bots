@@ -4,6 +4,7 @@ import {Disc} from "./objects/disc";
 import {ContactGenerator} from "./collisions/contact_generator";
 import {ContactResolver} from "./collisions/contact_resolver";
 import {Plane} from "./objects/plane";
+import {Box} from "./objects/box";
 
 export class World {
 
@@ -66,8 +67,19 @@ export class World {
             new Vector(0, -1),
             50,
         ));
+
+        // A box!
+        this.objects.push(new Box(
+            new Vector(20, 80),
+            100,    // mass
+            18,     // halfX
+            9,      // halfY
+        ));
+
         this.objects[0].velocity = new Vector(4, 12);
         this.objects[1].velocity = new Vector(-10, 12);
+        this.objects[6].velocity = new Vector(2, 20);
+        this.objects[6].angularVelocity = -1.5;
     }
 
     moveObjects(timestep: number) {

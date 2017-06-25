@@ -5,6 +5,7 @@ import {Disc} from "../objects/disc";
 import {discToDiscContact} from "./disc_contact";
 import {Plane} from "../objects/plane";
 import {planeToDiscContact} from "./plane_contact";
+import {Box} from "../objects/box";
 
 export interface Contact {
     data: ContactData
@@ -62,8 +63,13 @@ export class ContactGenerator {
         let typePairs = [
             [Disc, Disc],
             [Disc, Plane],
+            [Disc, Box],
             [Plane, Disc],
             [Plane, Plane],
+            [Plane, Box],
+            [Box, Disc],
+            [Box, Plane],
+            [Box, Box],
         ];
         let nullGenerator = (o1: WorldObject, o2: WorldObject): Array<ContactData> => {
             return [];
@@ -72,8 +78,13 @@ export class ContactGenerator {
         let generators = [
             discToDiscContact,
             this.flip(planeToDiscContact),
+            nullGenerator,  // TODO(davidw): call flip(boxToDisc)
             planeToDiscContact,
             nullGenerator,
+            nullGenerator,  // TODO(davidw): call flip(boxToPlane)
+            nullGenerator,  // TODO(davidw): implement boxToDisc
+            nullGenerator,  // TODO(davidw): implement boxToPlane
+            nullGenerator,  // TODO(davidw): implement boxToBox
         ];
 
         for (let [i, [type1, type2]] of typePairs.entries()) {
