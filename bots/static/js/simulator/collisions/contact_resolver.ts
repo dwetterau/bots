@@ -9,6 +9,10 @@ interface PositionChangeInfo {
     angularChanges: Array<number>
 }
 
+interface VelocityChangeInfo {
+    velocityChanges: Array<Vector>
+    angularVelocityChanges: Array<number>
+}
 
 class PreparedContact {
     contact: Contact;
@@ -159,11 +163,66 @@ class PreparedContact {
             angularChanges
         }
     }
+
+    applyVelocityChange(world: World): VelocityChangeInfo {
+        let velocityChanges = [new Vector(0, 0), new Vector(0, 0)];
+        let angularVelocityChanges = [0, 0];
+
+        let impulseContact = this.calculateFrictionlessImpulse(world);
+
+        // Transform impulse to world coordinates
+        let impulse = this.contactToWorld.transform(impulseContact);
+
+        for (let [i, objectIndex] of [
+            this.contact.object1Index, this.contact.object2Index
+        ].entries()) {
+            let o = world.objects[objectIndex];
+
+            let impulsiveTorque = this.relativeContactPosition[0].cross(impulse);
+            angularVelocityChanges[i] = impulsiveTorque / o.momentOfInertia();
+
+            let signedImpulse = impulse.scale(o.inverseMass());
+            if (i == 1) {
+                signedImpulse.reverse();
+            }
+            velocityChanges[i].add(signedImpulse);
+
+            // Actually apply the changes to the object
+            o.velocity.add(velocityChanges[i]);
+            o.angularVelocity += angularVelocityChanges[i];
+        }
+        return {
+            velocityChanges,
+            angularVelocityChanges,
+        }
+    }
+
+    calculateFrictionlessImpulse(world: World): Vector {
+        let deltaV = 0;
+        for (let [i, objectIndex] of [
+            this.contact.object1Index, this.contact.object2Index
+        ].entries()) {
+            let o = world.objects[objectIndex];
+
+            let angularDeltaV = (
+                this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
+                / o.momentOfInertia()
+            );
+            deltaV += angularDeltaV + o.inverseMass()
+        }
+        return new Vector(
+            this.desiredDeltaVelocity / deltaV,
+            0,
+        );
+    }
 }
 
 export class ContactResolver {
 
     maxPositionIterations = 100;
+    maxVelocityIterations = 100;
+    velocityEpsilon = 0.001;
+
     world: World;
 
     constructor(world: World) {
@@ -235,7 +294,7 @@ export class ContactResolver {
                                 )
                             );
                             deltaPosition.sub(c.relativeContactPosition[b]);
-                            let sign = b ? 1 : -1;
+                            let sign = b == 1 ? 1 : -1;
                             c.contact.data.penetration +=
                                 sign * (deltaPosition.dot(c.contact.data.contactNormal));
                         }
@@ -246,6 +305,59 @@ export class ContactResolver {
     }
 
     adjustVelocities(contacts: Array<PreparedContact>, duration: number) {
-        // TODO(davidw): Finish this!
+        let iteration = 0;
+        while (iteration++ < this.maxVelocityIterations) {
+            // Find the contact with the highest desired velocity change.
+            let maxIndex = -1;
+            let maxDeltaV = this.velocityEpsilon;
+            for (let [i, c] of contacts.entries()) {
+                if (c.desiredDeltaVelocity > maxDeltaV) {
+                    maxDeltaV = c.desiredDeltaVelocity;
+                    maxIndex = i;
+                }
+            }
+            if (maxIndex == -1) {
+                break
+            }
+
+            let velocityChangeInfo = contacts[maxIndex]
+                .applyVelocityChange(this.world);
+
+            // Compute the relative closing velocities as needed
+            for (let c of contacts) {
+                for (let b of [0, 1]) {
+                    let thisObjectIndex = c.contact.object1Index;
+                    if (b == 1) {
+                        thisObjectIndex = c.contact.object2Index;
+                    }
+
+                    for (let d of [0, 1]) {
+                        let resolvedObjectIndex = contacts[maxIndex]
+                            .contact.object1Index;
+                        if (d == 1) {
+                            resolvedObjectIndex = contacts[maxIndex]
+                                .contact.object2Index;
+                        }
+
+                        if (thisObjectIndex == resolvedObjectIndex) {
+                            let deltaV = velocityChangeInfo.velocityChanges[d].copy();
+                            deltaV.add(
+                                new Vector(
+                                    -c.relativeContactPosition[b].b,
+                                    c.relativeContactPosition[b].a,
+                                ).scale(velocityChangeInfo.angularVelocityChanges[d])
+                            );
+                            let signedDeltaV = c.contactToWorld.transformTranspose(deltaV);
+                            if (b == 1) {
+                                signedDeltaV.reverse()
+                            }
+                            c.contactVelocity.add(signedDeltaV);
+                            c.desiredDeltaVelocity =
+                                c.calculateDesiredDeltaVelocity(this.world, duration);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
