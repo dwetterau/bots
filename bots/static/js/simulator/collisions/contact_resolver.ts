@@ -56,7 +56,7 @@ class PreparedContact {
     }
 
     computeContactToWorld(normal: Vector): Matrix {
-        return new Matrix(normal.a, normal.b, normal.b, -normal.a);
+        return new Matrix(normal.a, -normal.b, normal.b, normal.a);
     }
 
     calculateLocalVelocity(objectIndex: number, o: WorldObject, duration: number): Vector {
@@ -178,7 +178,12 @@ class PreparedContact {
         ].entries()) {
             let o = world.objects[objectIndex];
 
-            let impulsiveTorque = this.relativeContactPosition[0].cross(impulse);
+            let impulsiveTorque: number;
+            if (i == 0) {
+                impulsiveTorque = this.relativeContactPosition[i].cross(impulse);
+            } else {
+                impulsiveTorque = impulse.cross(this.relativeContactPosition[i]);
+            }
             angularVelocityChanges[i] = impulsiveTorque / o.momentOfInertia();
 
             let signedImpulse = impulse.scale(o.inverseMass());
@@ -208,7 +213,15 @@ class PreparedContact {
                 this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
                 / o.momentOfInertia()
             );
-            deltaV += angularDeltaV + o.inverseMass()
+            let velAtPoint = new Vector(
+                -this.relativeContactPosition[i].b,
+                this.relativeContactPosition[i].a,
+            ).scale(angularDeltaV);
+
+            // Convert this back to contact coordinates
+            deltaV += velAtPoint.dot(this.contact.data.contactNormal);
+
+            deltaV += o.inverseMass()
         }
         return new Vector(
             this.desiredDeltaVelocity / deltaV,
@@ -302,6 +315,9 @@ export class ContactResolver {
                 }
             }
         }
+        if (iteration >= this.maxPositionIterations) {
+            throw Error("Hit position iteration limit")
+        }
     }
 
     adjustVelocities(contacts: Array<PreparedContact>, duration: number) {
@@ -358,6 +374,9 @@ export class ContactResolver {
                     }
                 }
             }
+        }
+        if (iteration >= this.maxVelocityIterations) {
+            throw Error("Hit velocity iteration limit")
         }
     }
 }

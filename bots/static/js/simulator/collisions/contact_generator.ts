@@ -4,7 +4,7 @@ import {WorldObject} from "../world_object";
 import {Disc} from "../objects/disc";
 import {discToDiscContact} from "./disc_contact";
 import {Plane} from "../objects/plane";
-import {planeToDiscContact} from "./plane_contact";
+import {planeToDiscContact, planeToBoxContact} from "./plane_contact";
 import {Box} from "../objects/box";
 
 export interface Contact {
@@ -81,9 +81,9 @@ export class ContactGenerator {
             nullGenerator,  // TODO(davidw): call flip(boxToDisc)
             planeToDiscContact,
             nullGenerator,
-            nullGenerator,  // TODO(davidw): call flip(boxToPlane)
+            planeToBoxContact,
             nullGenerator,  // TODO(davidw): implement boxToDisc
-            nullGenerator,  // TODO(davidw): implement boxToPlane
+            this.flip(planeToBoxContact),
             nullGenerator,  // TODO(davidw): implement boxToBox
         ];
 

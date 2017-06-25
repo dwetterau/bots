@@ -14,7 +14,7 @@ export class Box extends WorldObject {
     }
 
     momentOfInertia(): number {
-        // The moment of inertia for a thin disc is: M(dx^2 + dy^2) / 12
+        // The moment of inertia for a flat box is: M(dx^2 + dy^2) / 12
         return this.mass * ((4 * this.halfX * this.halfX) + (4 * this.halfY * this.halfY)) / 12;
     }
 
@@ -33,10 +33,10 @@ export class Box extends WorldObject {
 
         // Draw our rectangle
         ctx.rect(
-            -this.halfX,
-            -this.halfY,
-            this.halfX * 2,
-            this.halfY * 2,
+            -this.halfX * renderingInfo.canvasToGridRatio,
+            -this.halfY * renderingInfo.canvasToGridRatio,
+            this.halfX * 2 * renderingInfo.canvasToGridRatio,
+            this.halfY * 2 * renderingInfo.canvasToGridRatio,
         );
         ctx.fill();
         ctx.lineWidth = 2;
@@ -54,6 +54,13 @@ export class Box extends WorldObject {
             realWorldPoint.a - this.position.a,
             realWorldPoint.b - this.position.b,
         ));
+    }
+
+    translateLocalPoint(localPoint: Vector): Vector {
+        let realWorldPoint = localPoint.copy();
+        realWorldPoint = Matrix.fromRotation(this.rotation).transform(realWorldPoint);
+        realWorldPoint.add(this.position);
+        return realWorldPoint;
     }
 
     isInside(localPoint: Vector): boolean {

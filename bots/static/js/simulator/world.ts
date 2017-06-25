@@ -71,15 +71,15 @@ export class World {
         // A box!
         this.objects.push(new Box(
             new Vector(20, 80),
-            100,    // mass
+            10,    // mass
             18,     // halfX
             9,      // halfY
         ));
 
         this.objects[0].velocity = new Vector(4, 12);
         this.objects[1].velocity = new Vector(-10, 12);
-        this.objects[6].velocity = new Vector(2, 20);
-        this.objects[6].angularVelocity = -1.5;
+        this.objects[6].velocity = new Vector(2, -10);
+        this.objects[6].angularVelocity = -.5;
     }
 
     moveObjects(timestep: number) {
