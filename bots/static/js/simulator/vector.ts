@@ -34,8 +34,12 @@ export class Vector {
         return new Vector(v.a * fraction, v.b * fraction);
     }
 
+    squareMagnitude(): number {
+        return this.a * this.a + this.b * this.b
+    }
+
     magnitude(): number {
-        return Math.sqrt(this.a * this.a + this.b * this.b);
+        return Math.sqrt(this.squareMagnitude());
     }
 
     normalize(): void {

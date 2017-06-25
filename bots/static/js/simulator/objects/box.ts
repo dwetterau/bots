@@ -50,7 +50,7 @@ export class Box extends WorldObject {
     }
 
     translateRealWorldPoint(realWorldPoint: Vector): Vector {
-        return Matrix.fromRotation(this.rotation).transform(new Vector(
+        return Matrix.fromRotation(this.rotation).transformTranspose(new Vector(
             realWorldPoint.a - this.position.a,
             realWorldPoint.b - this.position.b,
         ));

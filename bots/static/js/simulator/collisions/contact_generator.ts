@@ -6,6 +6,7 @@ import {discToDiscContact} from "./disc_contact";
 import {Plane} from "../objects/plane";
 import {planeToDiscContact, planeToBoxContact} from "./plane_contact";
 import {Box} from "../objects/box";
+import {boxToDiscContact} from "./box_contact";
 
 export interface Contact {
     data: ContactData
@@ -78,11 +79,11 @@ export class ContactGenerator {
         let generators = [
             discToDiscContact,
             this.flip(planeToDiscContact),
-            nullGenerator,  // TODO(davidw): call flip(boxToDisc)
+            this.flip(boxToDiscContact),
             planeToDiscContact,
             nullGenerator,
             planeToBoxContact,
-            nullGenerator,  // TODO(davidw): implement boxToDisc
+            boxToDiscContact,
             this.flip(planeToBoxContact),
             nullGenerator,  // TODO(davidw): implement boxToBox
         ];

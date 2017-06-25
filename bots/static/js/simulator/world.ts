@@ -70,10 +70,16 @@ export class World {
 
         // A box!
         this.objects.push(new Box(
-            new Vector(20, 80),
-            10,    // mass
+            new Vector(20, 70),
+            50,     // mass
             18,     // halfX
             9,      // halfY
+        ));
+
+        this.objects.push(new Disc(
+            new Vector(10, 85),
+            30,     // mass
+            6,      // radius
         ));
 
         this.objects[0].velocity = new Vector(4, 12);
