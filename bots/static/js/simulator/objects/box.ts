@@ -49,6 +49,12 @@ export class Box extends WorldObject {
         ctx.translate(-x, -y);
     }
 
+    getAxis(index: number): Vector {
+        let axis = Matrix.fromRotation(this.rotation).transform(new Vector(1 - index, index));
+        axis.normalize();
+        return axis;
+    }
+
     translateRealWorldPoint(realWorldPoint: Vector): Vector {
         return Matrix.fromRotation(this.rotation).transformTranspose(new Vector(
             realWorldPoint.a - this.position.a,
@@ -61,6 +67,11 @@ export class Box extends WorldObject {
         realWorldPoint = Matrix.fromRotation(this.rotation).transform(realWorldPoint);
         realWorldPoint.add(this.position);
         return realWorldPoint;
+    }
+
+    transformToAxis(axis: Vector): number {
+        return this.halfX * Math.abs(axis.dot(this.getAxis(0))) +
+            this.halfY * Math.abs(axis.dot(this.getAxis(1)))
     }
 
     isInside(localPoint: Vector): boolean {

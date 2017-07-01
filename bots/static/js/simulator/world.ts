@@ -43,6 +43,29 @@ export class World {
             20, // mass
             10, // radius
         ));
+        this.addWalls();
+        // A box!
+        this.objects.push(new Box(
+            new Vector(20, 70),
+            50,     // mass
+            18,     // halfX
+            9,      // halfY
+        ));
+
+        this.objects.push(new Box(
+            new Vector(50, 80),
+            20,     // mass
+            4,      // halfX
+            5,      // halfY
+        ));
+
+        this.objects[0].velocity = new Vector(4, 12);
+        this.objects[1].velocity = new Vector(-10, 12);
+        this.objects[6].velocity = new Vector(4, -10);
+        this.objects[6].angularVelocity = -.5;
+    }
+
+    addWalls() {
         // Bottom wall
         this.objects.push(new Plane(
             new Vector(50, 0),
@@ -67,25 +90,6 @@ export class World {
             new Vector(0, -1),
             50,
         ));
-
-        // A box!
-        this.objects.push(new Box(
-            new Vector(20, 70),
-            50,     // mass
-            18,     // halfX
-            9,      // halfY
-        ));
-
-        this.objects.push(new Disc(
-            new Vector(10, 85),
-            30,     // mass
-            6,      // radius
-        ));
-
-        this.objects[0].velocity = new Vector(4, 12);
-        this.objects[1].velocity = new Vector(-10, 12);
-        this.objects[6].velocity = new Vector(2, -10);
-        this.objects[6].angularVelocity = -.5;
     }
 
     moveObjects(timestep: number) {

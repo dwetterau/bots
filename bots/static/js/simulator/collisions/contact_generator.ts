@@ -6,7 +6,7 @@ import {discToDiscContact} from "./disc_contact";
 import {Plane} from "../objects/plane";
 import {planeToDiscContact, planeToBoxContact} from "./plane_contact";
 import {Box} from "../objects/box";
-import {boxToDiscContact} from "./box_contact";
+import {boxToDiscContact, boxToBoxContact} from "./box_contact";
 
 export interface Contact {
     data: ContactData
@@ -53,8 +53,8 @@ export class ContactGenerator {
 
         return (o1: WorldObject, o2: WorldObject) => {
             let contactData = f(o2, o1);
-            for (let c of contactData) {
-                c.contactNormal.reverse();
+            for (let i in contactData) {
+                contactData[i].contactNormal.reverse();
             }
             return contactData
         };
@@ -85,7 +85,7 @@ export class ContactGenerator {
             planeToBoxContact,
             boxToDiscContact,
             this.flip(planeToBoxContact),
-            nullGenerator,  // TODO(davidw): implement boxToBox
+            boxToBoxContact,
         ];
 
         for (let [i, [type1, type2]] of typePairs.entries()) {

@@ -34,9 +34,10 @@ export function planeToBoxContact(plane: Plane, box: Box): Array<ContactData> {
         box.translateLocalPoint(new Vector(box.halfX, -box.halfY)),
     ];
     let contacts: Array<ContactData> = [];
-    let contactNormal = plane.normal.copy();
-    contactNormal.reverse();
     for (let point of realWorldPoints) {
+        let contactNormal = plane.normal.copy();
+        contactNormal.reverse();
+
         // See if the point is penetrating the plane
         let distance = plane.normal.dot(point) - plane.offset;
 
