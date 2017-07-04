@@ -17,7 +17,11 @@ export class WorldObject {
     angularVelocity: number;
     angularAcceleration: number;
 
+    linearDamping = .99;
+    angularDamping = .80;
+
     forceAccumulator: Vector;
+    lastFrameAcceleration: Vector;
     torqueAccumulator: number;
 
     color: string;
@@ -65,6 +69,9 @@ export class WorldObject {
 
     setAcceleration() {
         // a = F/m.
+        this.lastFrameAcceleration = this.acceleration.copy();
+        this.lastFrameAcceleration.add(this.forceAccumulator.scale(this.inverseMass()));
+
         this.acceleration = this.forceAccumulator.scale(this.inverseMass());
     }
 
@@ -91,6 +98,11 @@ export class WorldObject {
         }
     }
 
+    applyDrag(dt: number) {
+        this.velocity.scaleInPlace(Math.pow(this.linearDamping, dt));
+        this.angularVelocity *= Math.pow(this.angularDamping, dt);
+    }
+
     velocityAtPoint(localPoint: Vector): Vector {
         let v = this.velocity.copy();
 
@@ -99,7 +111,8 @@ export class WorldObject {
             -localPoint.b,
             localPoint.a,
         );
-        tangent.scaleInPlace(this.angularVelocity);
+        tangent.normalize();
+        tangent.scaleInPlace(this.angularVelocity * localPoint.magnitude());
         v.add(tangent);
         return v;
     }

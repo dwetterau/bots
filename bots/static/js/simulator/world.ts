@@ -10,7 +10,7 @@ export class World {
 
     // Universal constants
     Gravity = 20;
-    Restitution = .8;
+    Restitution = .6;
     Tolerance = .005;
     VelocityLimit = .25;
     AngularLimit = .2;
@@ -34,7 +34,7 @@ export class World {
 
         // Make a simple disc for now
         this.objects.push(new Disc(
-            new Vector(50, 50),
+            new Vector(20, 20),
             10, // mass
             5,  // radius
         ));
@@ -43,7 +43,6 @@ export class World {
             20, // mass
             10, // radius
         ));
-        this.addWalls();
         // A box!
         this.objects.push(new Box(
             new Vector(20, 70),
@@ -51,18 +50,23 @@ export class World {
             18,     // halfX
             9,      // halfY
         ));
-
         this.objects.push(new Box(
-            new Vector(50, 80),
+            new Vector(10, 20),
             20,     // mass
             4,      // halfX
             5,      // halfY
         ));
-
-        this.objects[0].velocity = new Vector(4, 12);
+        this.objects[0].velocity = new Vector(20, 12);
         this.objects[1].velocity = new Vector(-10, 12);
-        this.objects[6].velocity = new Vector(4, -10);
-        this.objects[6].angularVelocity = -.5;
+        this.objects[3].velocity = new Vector(4, -10);
+        this.objects[3].angularVelocity = -.5;
+
+        for (let o of this.objects) {
+            o.velocity = new Vector(Math.random() * 10 - 5, Math.random() * 10 - 5);
+            o.angularVelocity = Math.random() * Math.PI - Math.PI / 2;
+        }
+
+        this.addWalls();
     }
 
     addWalls() {
@@ -101,22 +105,19 @@ export class World {
         for (let object of this.objects) {
             object.clearForFrame();
 
-            // Hack to test out a rotation
-            if (this.objects[0].position.a == 50 && this.objects[0].position.b == 50) {
-                // Force going up at the right edge
-                object.accumulateForce(new Vector(0, 10 * 1000), new Vector(55, 50));
-            }
-
             if (object.mass != Infinity) {
                 // Only apply gravity if the object has non-infinite mass
                 object.accumulateForce(gravity.scale(object.mass), object.position);
             }
             object.setAcceleration();
             object.updateVelocity(dt);
-            object.updatePosition(dt);
 
             object.setAngularAcceleration();
             object.updateAngularVelocity(dt);
+
+            object.applyDrag(dt);
+
+            object.updatePosition(dt);
             object.updateRotation(dt);
         }
 

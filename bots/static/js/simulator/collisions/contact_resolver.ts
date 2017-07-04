@@ -30,6 +30,9 @@ class PreparedContact {
     // object's origin.
     relativeContactPosition: Array<Vector>;
 
+    // TODO(davidw): Allow this to be set by the objects themselves
+    friction = 0.3;
+
     constructor(contact: Contact, world: World, duration: number) {
         this.contact = contact;
         this.contactToWorld = this.computeContactToWorld(contact.data.contactNormal);
@@ -64,7 +67,7 @@ class PreparedContact {
         let contactVelocity = this.contactToWorld.transformTranspose(velocity);
 
         let accelerationVelocity = this.contactToWorld.transformTranspose(
-            o.acceleration.scale(duration)
+            o.lastFrameAcceleration.scale(duration)
         );
 
         // We clear out all acceleration in the direction of the contact
@@ -78,10 +81,10 @@ class PreparedContact {
         let o1 = world.objects[this.contact.object1Index];
         let o2 = world.objects[this.contact.object2Index];
 
-        let velocityFromAcceleration = o1.acceleration
+        let velocityFromAcceleration = o1.lastFrameAcceleration
             .scale(duration)
             .dot(this.contact.data.contactNormal);
-        velocityFromAcceleration += o2.acceleration
+        velocityFromAcceleration -= o2.lastFrameAcceleration
             .scale(duration)
             .dot(this.contact.data.contactNormal);
 
@@ -168,7 +171,9 @@ class PreparedContact {
         let velocityChanges = [new Vector(0, 0), new Vector(0, 0)];
         let angularVelocityChanges = [0, 0];
 
-        let impulseContact = this.calculateFrictionlessImpulse(world);
+        // TODO(davidw): Switch methods when friction is 0
+        // let impulseContact = this.calculateFrictionlessImpulse(world);
+        let impulseContact = this.calculateFrictionImpulse(world);
 
         // Transform impulse to world coordinates
         let impulse = this.contactToWorld.transform(impulseContact);
@@ -209,17 +214,19 @@ class PreparedContact {
         ].entries()) {
             let o = world.objects[objectIndex];
 
-            let angularDeltaV = (
-                this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
-                / o.momentOfInertia()
-            );
-            let velAtPoint = new Vector(
+            let torquePerUnitImpulse = this.relativeContactPosition[i]
+                .cross(this.contact.data.contactNormal);
+
+            let rotationPerUnitImpulse = torquePerUnitImpulse / o.momentOfInertia();
+            let velocityPerUnitImpulse = new Vector(
                 -this.relativeContactPosition[i].b,
                 this.relativeContactPosition[i].a,
-            ).scale(angularDeltaV);
+            ).scale(rotationPerUnitImpulse);
 
             // Convert this back to contact coordinates
-            deltaV += velAtPoint.dot(this.contact.data.contactNormal);
+            // This is an optimization of simply this.contactToWorld.transformTranspose(vel)
+            // since we don't care about non-x directions for frictionless impulse
+            deltaV += velocityPerUnitImpulse.dot(this.contact.data.contactNormal);
 
             deltaV += o.inverseMass()
         }
@@ -228,12 +235,65 @@ class PreparedContact {
             0,
         );
     }
+
+    calculateFrictionImpulse(world: World): Vector {
+        let impulseUnitToContactVelocityFunctions = [];
+        for (let [i, objectIndex] of [
+            this.contact.object1Index, this.contact.object2Index
+        ].entries()) {
+            let o = world.objects[objectIndex];
+
+            impulseUnitToContactVelocityFunctions.push(function (impulseDirection: Vector): Vector {
+                let worldImpulseDirection = this.contactToWorld.transform(impulseDirection);
+                let torquePerUnitImpulse = this.relativeContactPosition[i]
+                    .cross(worldImpulseDirection);
+                let rotationPerUnitImpulse = torquePerUnitImpulse / o.momentOfInertia();
+                let velocityPerUnitImpulse = new Vector(
+                    -this.relativeContactPosition[i].b,
+                    this.relativeContactPosition[i].a,
+                ).scale(rotationPerUnitImpulse);
+
+                // Add in the linear component too
+                velocityPerUnitImpulse.add(worldImpulseDirection.scale(o.inverseMass()));
+                velocityPerUnitImpulse = this.contactToWorld
+                    .transformTranspose(velocityPerUnitImpulse);
+                return velocityPerUnitImpulse
+            }.bind(this));
+        }
+
+        let velocitiesToEliminate = new Vector(
+            this.desiredDeltaVelocity,
+            -this.contactVelocity.b,
+        );
+        let impulseDirection = velocitiesToEliminate.copy();
+        impulseDirection.normalize();
+
+        let velocityPerUnitImpulseContact = new Vector(0, 0);
+        for (let f of impulseUnitToContactVelocityFunctions) {
+            velocityPerUnitImpulseContact.add(f(impulseDirection));
+        }
+        let scale = this.desiredDeltaVelocity / velocityPerUnitImpulseContact.a;
+        let impulseContact = velocityPerUnitImpulseContact.copy();
+        impulseContact.normalize();
+        impulseContact.scaleInPlace(scale);
+
+        let planarImpulse = Math.abs(impulseContact.b);
+        if (planarImpulse > impulseContact.a * this.friction) {
+            // Adjust the impulse contact according to friction
+            impulseContact.b /= planarImpulse;
+            impulseContact.a = velocityPerUnitImpulseContact.a
+                + velocityPerUnitImpulseContact.b * this.friction * impulseContact.b;
+            impulseContact.a = this.desiredDeltaVelocity / impulseContact.a;
+            impulseContact.b *= this.friction * impulseContact.a;
+        }
+        return impulseContact;
+    }
 }
 
 export class ContactResolver {
 
     maxPositionIterations = 100;
-    maxVelocityIterations = 100;
+    maxVelocityIterations = 1000;
     velocityEpsilon = 0.001;
 
     world: World;
