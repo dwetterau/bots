@@ -5,6 +5,8 @@ import {TorqueGenerator} from "./torque_generator";
 export interface RenderingInfo {
     canvasToGridRatio: number
     height: number
+    getX: (x: number) => number
+    getY: (y: number) => number
 }
 
 export type WorldObjectID = string;

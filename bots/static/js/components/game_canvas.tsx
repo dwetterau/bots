@@ -20,7 +20,8 @@ export class GameCanvas extends React.Component<{}, {}> {
     width: number = 0;
     height: number = 0;
     canvasToGridRatio: number = 0;
-    wheelMotor: TorqueGenerator;
+    wheelMotor1: TorqueGenerator;
+    wheelMotor2: TorqueGenerator;
 
     componentDidMount() {
         let canvas = this.refs['game_canvas'] as HTMLCanvasElement;
@@ -37,21 +38,37 @@ export class GameCanvas extends React.Component<{}, {}> {
         this.intervalID = setInterval(this.draw.bind(this), this.DRAW_INTERVAL);
         this.simulation = new World(100, gridWidth);
 
+        let bot = this.createBot(new Vector(15, 10));
+        this.wheelMotor1 = new TorqueGenerator(-500, 6);
+        bot.objects[1].torqueGenerator = this.wheelMotor1;
+        bot.objects[2].torqueGenerator = this.wheelMotor1;
+        this.simulation.addAssembly(bot);
+
+        let bot2 = this.createBot(new Vector(85, 10));
+        this.wheelMotor2 = new TorqueGenerator(500, 6);
+        bot2.objects[1].torqueGenerator = this.wheelMotor2;
+        bot2.objects[2].torqueGenerator = this.wheelMotor2;
+        this.simulation.addAssembly(bot2);
+
+        document.addEventListener("keydown", this.onKeyPress.bind(this))
+    }
+
+    createBot(p: Vector): Assembly {
         let bot = new Assembly();
         bot.setObjects([
             new Box(
-                new Vector(20, 30),
+                p,
                 20,  // mass
                 10,  // halfX
                 4,   // halfY
             ),
             new Disc(
-                new Vector(15, 26),
+                new Vector(p.a - 5, p.b - 4),
                 5,  // mass
                 3,  // radius
             ),
             new Disc(
-                new Vector(25, 26),
+                new Vector(p.a + 5, p.b - 4),
                 5,  // mass
                 3,  // radius
             ),
@@ -90,15 +107,27 @@ export class GameCanvas extends React.Component<{}, {}> {
                 new Vector(0, 0),
             )
         ]);
-        this.wheelMotor = new TorqueGenerator(-100);
-        bot.objects[1].torqueGenerator = this.wheelMotor;
-        bot.objects[2].torqueGenerator = this.wheelMotor;
-        this.simulation.addAssembly(bot);
+        return bot;
     }
 
     onKeyPress(e) {
-        if (e.which == 32) {
-            this.wheelMotor.torque = -this.wheelMotor.torque
+        // a
+        if (e.which == 65) {
+            this.wheelMotor1.torque = Math.abs(this.wheelMotor1.torque)
+        }
+        // d
+        if (e.which == 68) {
+            this.wheelMotor1.torque = -Math.abs(this.wheelMotor1.torque)
+        }
+
+        // left
+        if (e.which == 37) {
+            this.wheelMotor2.torque = Math.abs(this.wheelMotor2.torque)
+        }
+
+        // right
+        if (e.which == 39) {
+            this.wheelMotor2.torque = -Math.abs(this.wheelMotor2.torque)
         }
     }
 
@@ -123,6 +152,12 @@ export class GameCanvas extends React.Component<{}, {}> {
         const renderingInfo: RenderingInfo = {
             canvasToGridRatio: this.canvasToGridRatio,
             height: this.height,
+            getX: (x: number): number => {
+                return x * renderingInfo.canvasToGridRatio;
+            },
+            getY: (y: number): number => {
+                return renderingInfo.height - (y * renderingInfo.canvasToGridRatio)
+            },
         };
 
         // Draw each object
@@ -150,10 +185,6 @@ export class GameCanvas extends React.Component<{}, {}> {
                 ref="game_canvas"
                 width="800"
                 height="584"
-            />
-            <input
-                type="text"
-                onKeyPress={this.onKeyPress.bind(this)}
             />
         </div>
     }

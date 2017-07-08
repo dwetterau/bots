@@ -31,7 +31,7 @@ class PreparedContact {
     relativeContactPosition: Array<Vector>;
 
     // TODO(davidw): Allow this to be set by the objects themselves
-    friction = 0.3;
+    friction = 0.4;
 
     constructor(contact: Contact, world: World, duration: number) {
         this.contact = contact;

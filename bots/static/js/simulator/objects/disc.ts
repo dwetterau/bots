@@ -19,32 +19,20 @@ export class Disc extends WorldObject {
         ctx.beginPath();
         ctx.fillStyle = this.color;
 
-        let radiusHeight = this.radius * renderingInfo.canvasToGridRatio;
-        let x = Math.round(this.position.a * renderingInfo.canvasToGridRatio) - radiusHeight;
-        let y = Math.round(
-            renderingInfo.height
-            - (this.position.b * renderingInfo.canvasToGridRatio)
-            - radiusHeight
-        );
-        radiusHeight = Math.round(radiusHeight);
+        // Center and rotate the canvas to our liking
+        let x = renderingInfo.getX(this.position.a);
+        let y = renderingInfo.getY(this.position.b);
+        ctx.translate(x, y);
+        let canvasRotation = Math.PI * 2 - this.rotation;
+        ctx.rotate(canvasRotation);
 
-        let clampRotation = function(r: number) {
-            if (r < 0) {
-                r += 2 * Math.PI
-            } else if (r > 2 * Math.PI) {
-                r -= 2 * Math.PI
-            }
-            return r
-        };
-        let start = clampRotation(Math.PI * 2 - this.rotation);
-        let end = clampRotation(start + Math.PI * 2 - .2);
-
+        let radiusHeight = Math.round(this.radius * renderingInfo.canvasToGridRatio);
         ctx.arc(
-            x + radiusHeight,
-            y + radiusHeight,
+            0,
+            0,
             radiusHeight,
-            start,
-            end,
+            0,
+            Math.PI * 2,
             false,  // anticlockwise
         );
         ctx.fill();
@@ -52,6 +40,20 @@ export class Disc extends WorldObject {
         ctx.strokeStyle = "#000";
         ctx.stroke();
         ctx.closePath();
+
+        ctx.moveTo(-radiusHeight / 2, 0);
+        ctx.lineTo(radiusHeight / 2, 0);
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.moveTo(0, -radiusHeight / 2);
+        ctx.lineTo(0, radiusHeight / 2);
+        ctx.stroke();
+        ctx.closePath();
+
+        // Reset the canvas
+        ctx.rotate(-canvasRotation);
+        ctx.translate(-x, -y);
     }
 
     translateRealWorldPoint(realWorldPoint: Vector): Vector {

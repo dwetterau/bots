@@ -1,6 +1,7 @@
 
 import {WorldObject, RenderingInfo} from "./world_object";
 import {Vector} from "./vector";
+import {render} from "react-dom";
 export class Spring {
     // Spring constant
     k: number;
@@ -44,20 +45,13 @@ export class Spring {
 
         let realWorldP1 = this.o1.translateLocalPoint(this.p1);
         let realWorldP2 = this.o2.translateLocalPoint(this.p2);
-
-        let getX = (x: number): number => {
-            return Math.round(x * renderingInfo.canvasToGridRatio);
-        };
-        let getY = (y: number): number => {
-            return Math.round(renderingInfo.height - (y * renderingInfo.canvasToGridRatio))
-        };
         ctx.moveTo(
-            getX(realWorldP1.a),
-            getY(realWorldP1.b),
+            renderingInfo.getX(realWorldP1.a),
+            renderingInfo.getY(realWorldP1.b),
         );
         ctx.lineTo(
-            getX(realWorldP2.a),
-            getY(realWorldP2.b),
+            renderingInfo.getX(realWorldP2.a),
+            renderingInfo.getY(realWorldP2.b),
         );
         ctx.stroke();
         ctx.lineWidth = 2;

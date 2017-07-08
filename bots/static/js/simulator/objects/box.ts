@@ -23,10 +23,8 @@ export class Box extends WorldObject {
         ctx.fillStyle = this.color;
 
         // Center and rotate the canvas to our liking
-        let x = Math.round(this.position.a * renderingInfo.canvasToGridRatio);
-        let y = Math.round(
-            renderingInfo.height - (this.position.b * renderingInfo.canvasToGridRatio)
-        );
+        let x = renderingInfo.getX(this.position.a);
+        let y = renderingInfo.getY(this.position.b);
         ctx.translate(x, y);
         let canvasRotation = Math.PI * 2 - this.rotation;
         ctx.rotate(canvasRotation);

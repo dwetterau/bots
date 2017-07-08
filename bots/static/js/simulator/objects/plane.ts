@@ -20,14 +20,6 @@ export class Plane extends WorldObject {
     drawSelf(ctx: CanvasRenderingContext2D, renderingInfo: RenderingInfo) {
         ctx.beginPath();
         ctx.fillStyle = this.color;
-
-        let getX = (x: number): number => {
-            return Math.round(x * renderingInfo.canvasToGridRatio);
-        };
-        let getY = (y: number): number => {
-            return Math.round(renderingInfo.height - (y * renderingInfo.canvasToGridRatio))
-        };
-
         let normToLeft = new Vector(
             -this.normal.b,
             this.normal.a,
@@ -35,14 +27,14 @@ export class Plane extends WorldObject {
         normToLeft.scaleInPlace(this.squareRadius);
 
         ctx.moveTo(
-            getX(this.position.a + normToLeft.a),
-            getY(this.position.b + normToLeft.b),
+            renderingInfo.getX(this.position.a + normToLeft.a),
+            renderingInfo.getY(this.position.b + normToLeft.b),
         );
 
         normToLeft.reverse();
         ctx.lineTo(
-            getX(this.position.a + normToLeft.a),
-            getY(this.position.b + normToLeft.b),
+            renderingInfo.getX(this.position.a + normToLeft.a),
+            renderingInfo.getY(this.position.b + normToLeft.b),
         );
 
         ctx.lineWidth = 2;
