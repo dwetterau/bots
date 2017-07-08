@@ -6,6 +6,7 @@ import {ContactResolver} from "./collisions/contact_resolver";
 import {Plane} from "./objects/plane";
 import {Box} from "./objects/box";
 import {Spring} from "./spring";
+import {Assembly} from "./assembly";
 
 export class World {
 
@@ -22,6 +23,8 @@ export class World {
     gravityDirection: Vector = new Vector(0, -1);
     objects: Array<WorldObject> = [];
     springs: Array<Spring> = [];
+    assemblies: Array<Assembly> = [];
+    objectIDToAssembly: {[objectID: string]: Assembly};
 
     // Internal components
     contactGenerator: ContactGenerator;
@@ -34,50 +37,9 @@ export class World {
         this.contactGenerator = new ContactGenerator(this);
         this.contactResolver = new ContactResolver(this);
 
-        // Make a simple disc for now
-        this.objects.push(new Disc(
-            new Vector(20, 20),
-            10, // mass
-            5,  // radius
-        ));
-        this.objects.push(new Disc(
-            new Vector(89, 50),
-            20, // mass
-            10, // radius
-        ));
-        // A box!
-        this.objects.push(new Box(
-            new Vector(20, 70),
-            50,     // mass
-            18,     // halfX
-            9,      // halfY
-        ));
-        this.objects.push(new Box(
-            new Vector(10, 20),
-            20,     // mass
-            4,      // halfX
-            5,      // halfY
-        ));
-        this.objects[0].velocity = new Vector(20, 12);
-        this.objects[1].velocity = new Vector(-10, 12);
-        this.objects[3].velocity = new Vector(4, -10);
-        this.objects[3].angularVelocity = -.5;
+        this.objectIDToAssembly = {};
 
-        for (let o of this.objects) {
-            o.velocity = new Vector(Math.random() * 10 - 5, Math.random() * 10 - 5);
-            o.angularVelocity = Math.random() * Math.PI - Math.PI / 2;
-        }
         this.addWalls();
-
-
-        this.springs.push(new Spring(
-            50,  // spring constant
-            5,  // rest length
-            this.objects[0],
-            new Vector(3, 2),
-            this.objects[7],
-            new Vector(0, 0),
-        ));
     }
 
     addWalls() {
@@ -105,6 +67,17 @@ export class World {
             new Vector(0, -1),
             50,
         ));
+    }
+
+    addAssembly(a: Assembly) {
+        this.assemblies.push(a);
+        for (let o of a.objects) {
+            this.objectIDToAssembly[o.id] = a;
+            this.objects.push(o)
+        }
+        for (let s of a.springs) {
+            this.springs.push(s)
+        }
     }
 
     moveObjects(timestep: number) {

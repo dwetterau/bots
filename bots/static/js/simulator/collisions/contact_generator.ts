@@ -33,8 +33,15 @@ export class ContactGenerator {
         // TODO: Use a KD tree or something
         for (let i = 0; i < this.world.objects.length; i++) {
             let o1 = this.world.objects[i];
+            let a = this.world.objectIDToAssembly[o1.id];
             for (let j = i + 1; j < this.world.objects.length; j++) {
-                for (let contact of this.computeContactData(o1, this.world.objects[j])) {
+                // If the two objects are in the same assembly, we want to skip all detection
+                let o2 = this.world.objects[j];
+                if (a && a.contains(o2)) {
+                    continue
+                }
+
+                for (let contact of this.computeContactData(o1, o2)) {
                     contacts.push({
                         data: contact,
                         object1Index: i,

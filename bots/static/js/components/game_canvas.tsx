@@ -1,6 +1,11 @@
 import * as React from "react";
 import {World} from "../simulator/world";
 import {RenderingInfo} from "../simulator/world_object";
+import {Assembly} from "../simulator/assembly";
+import {Box} from "../simulator/objects/box";
+import {Vector} from "../simulator/vector";
+import {Disc} from "../simulator/objects/disc";
+import {Spring} from "../simulator/spring";
 
 export class GameCanvas extends React.Component<{}, {}> {
     ctx: CanvasRenderingContext2D = null;
@@ -29,6 +34,61 @@ export class GameCanvas extends React.Component<{}, {}> {
 
         this.intervalID = setInterval(this.draw.bind(this), this.DRAW_INTERVAL);
         this.simulation = new World(100, gridWidth);
+
+        let bot = new Assembly();
+        bot.setObjects([
+            new Box(
+                new Vector(20, 30),
+                20,  // mass
+                10,  // halfX
+                4,   // halfY
+            ),
+            new Disc(
+                new Vector(15, 26),
+                5,  // mass
+                3,  // radius
+            ),
+            new Disc(
+                new Vector(25, 26),
+                5,  // mass
+                3,  // radius
+            ),
+        ]);
+        bot.setSprings([
+            new Spring(
+                5000,
+                .25,
+                bot.objects[0],
+                new Vector(-4, -4),
+                bot.objects[1],
+                new Vector(0, 0),
+            ),
+            new Spring(
+                5000,
+                .25,
+                bot.objects[0],
+                new Vector(-6, -4),
+                bot.objects[1],
+                new Vector(0, 0),
+            ),
+            new Spring(
+                5000,
+                .25,
+                bot.objects[0],
+                new Vector(4, -4),
+                bot.objects[2],
+                new Vector(0, 0),
+            ),
+            new Spring(
+                5000,
+                .25,
+                bot.objects[0],
+                new Vector(6, -4),
+                bot.objects[2],
+                new Vector(0, 0),
+            )
+        ]);
+        this.simulation.addAssembly(bot);
     }
 
     componentWillUnmount() {
