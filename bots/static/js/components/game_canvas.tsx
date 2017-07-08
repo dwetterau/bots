@@ -59,6 +59,11 @@ export class GameCanvas extends React.Component<{}, {}> {
             object.drawSelf(this.ctx, renderingInfo);
         }
 
+        // Draw each spring
+        for (let spring of this.simulation.springs) {
+            spring.drawSelf(this.ctx, renderingInfo);
+        }
+
         // Draw stats
         this.ctx.fillStyle = "#000000";
         let y = 10;

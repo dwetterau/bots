@@ -25,7 +25,7 @@ export class Plane extends WorldObject {
             return Math.round(x * renderingInfo.canvasToGridRatio);
         };
         let getY = (y: number): number => {
-            return renderingInfo.height - (y * renderingInfo.canvasToGridRatio)
+            return Math.round(renderingInfo.height - (y * renderingInfo.canvasToGridRatio))
         };
 
         let normToLeft = new Vector(
@@ -51,14 +51,16 @@ export class Plane extends WorldObject {
     }
 
     translateRealWorldPoint(realWorldPoint: Vector): Vector {
-        throw Error("Not implemented")
+        return new Vector(
+            realWorldPoint.a - this.position.a,
+            realWorldPoint.b - this.position.b,
+        )
     }
 
-    isInside(p: Vector): boolean {
-        // Note this isn't all that hard:
-        // - Take dot product of point and this.normal
-        // - Take dot product of this.normal and this.position
-        // - Subtract
-        throw Error("Not implemented")
+    translateLocalPoint(localPoint: Vector): Vector {
+        return new Vector(
+            this.position.a + localPoint.a,
+            this.position.b + localPoint.b,
+        )
     }
 }

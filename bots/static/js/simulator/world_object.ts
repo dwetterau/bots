@@ -49,14 +49,13 @@ export class WorldObject {
         // component of the force (the portion that goes through the center of mass?)
         this.forceAccumulator.add(f);
 
-        // Translate the realWorldPoint into a local point
-        let localPoint = this.translateRealWorldPoint(realWorldPoint);
+        // Translate the realWorldPoint into a point relative to the center of mass
+        let centerOfMassPoint = new Vector(
+            realWorldPoint.a - this.position.a,
+            realWorldPoint.b - this.position.b,
+        );
 
-        if (!this.isInside(localPoint)) {
-            throw Error("Force applied that was outside of object");
-        }
-
-        this.torqueAccumulator += localPoint.cross(f)
+        this.torqueAccumulator += centerOfMassPoint.cross(f)
     }
 
     updatePosition(dt: number) {
@@ -133,7 +132,7 @@ export class WorldObject {
         throw Error("Abstract method, subclasses must implement.");
     }
 
-    isInside(p: Vector): boolean {
+    translateLocalPoint(localPoint: Vector): Vector {
         throw Error("Abstract method, subclasses must implement.");
     }
 }

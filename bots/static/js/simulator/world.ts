@@ -5,6 +5,7 @@ import {ContactGenerator} from "./collisions/contact_generator";
 import {ContactResolver} from "./collisions/contact_resolver";
 import {Plane} from "./objects/plane";
 import {Box} from "./objects/box";
+import {Spring} from "./spring";
 
 export class World {
 
@@ -20,6 +21,7 @@ export class World {
     width: number = 0;
     gravityDirection: Vector = new Vector(0, -1);
     objects: Array<WorldObject> = [];
+    springs: Array<Spring> = [];
 
     // Internal components
     contactGenerator: ContactGenerator;
@@ -65,8 +67,17 @@ export class World {
             o.velocity = new Vector(Math.random() * 10 - 5, Math.random() * 10 - 5);
             o.angularVelocity = Math.random() * Math.PI - Math.PI / 2;
         }
-
         this.addWalls();
+
+
+        this.springs.push(new Spring(
+            50,  // spring constant
+            5,  // rest length
+            this.objects[0],
+            new Vector(3, 2),
+            this.objects[7],
+            new Vector(0, 0),
+        ));
     }
 
     addWalls() {
@@ -100,11 +111,16 @@ export class World {
         let dt = timestep / 1000.0;
         let gravity = this.gravityDirection.scale(this.Gravity);
 
-        // TODO: Collisions with walls and other objects
-
         for (let object of this.objects) {
             object.clearForFrame();
+        }
 
+        // Apply all spring forces
+        for (let spring of this.springs) {
+            spring.accumulateForces();
+        }
+
+        for (let object of this.objects) {
             if (object.mass != Infinity) {
                 // Only apply gravity if the object has non-infinite mass
                 object.accumulateForce(gravity.scale(object.mass), object.position);

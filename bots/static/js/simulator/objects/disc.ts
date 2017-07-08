@@ -1,5 +1,6 @@
 import {WorldObject, RenderingInfo} from "../world_object";
 import {Vector} from "../vector";
+import {Matrix} from "../matrix";
 
 export class Disc extends WorldObject {
     radius: number = 0;
@@ -54,10 +55,17 @@ export class Disc extends WorldObject {
     }
 
     translateRealWorldPoint(realWorldPoint: Vector): Vector {
-        return new Vector(
+        return Matrix.fromRotation(this.rotation).transformTranspose(new Vector(
             realWorldPoint.a - this.position.a,
             realWorldPoint.b - this.position.b,
-        );
+        ));
+    }
+
+    translateLocalPoint(localPoint: Vector): Vector {
+        let realWorldPoint = localPoint.copy();
+        realWorldPoint = Matrix.fromRotation(this.rotation).transform(realWorldPoint);
+        realWorldPoint.add(this.position);
+        return realWorldPoint;
     }
 
     isInside(p: Vector): boolean {
