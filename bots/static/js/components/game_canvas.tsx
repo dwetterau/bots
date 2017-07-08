@@ -6,6 +6,7 @@ import {Box} from "../simulator/objects/box";
 import {Vector} from "../simulator/vector";
 import {Disc} from "../simulator/objects/disc";
 import {Spring} from "../simulator/spring";
+import {TorqueGenerator} from "../simulator/torque_generator";
 
 export class GameCanvas extends React.Component<{}, {}> {
     ctx: CanvasRenderingContext2D = null;
@@ -19,6 +20,7 @@ export class GameCanvas extends React.Component<{}, {}> {
     width: number = 0;
     height: number = 0;
     canvasToGridRatio: number = 0;
+    wheelMotor: TorqueGenerator;
 
     componentDidMount() {
         let canvas = this.refs['game_canvas'] as HTMLCanvasElement;
@@ -56,39 +58,48 @@ export class GameCanvas extends React.Component<{}, {}> {
         ]);
         bot.setSprings([
             new Spring(
-                5000,
-                .25,
+                50000,
+                .5,
                 bot.objects[0],
                 new Vector(-4, -4),
                 bot.objects[1],
                 new Vector(0, 0),
             ),
             new Spring(
-                5000,
-                .25,
+                50000,
+                .5,
                 bot.objects[0],
                 new Vector(-6, -4),
                 bot.objects[1],
                 new Vector(0, 0),
             ),
             new Spring(
-                5000,
-                .25,
+                50000,
+                .5,
                 bot.objects[0],
                 new Vector(4, -4),
                 bot.objects[2],
                 new Vector(0, 0),
             ),
             new Spring(
-                5000,
-                .25,
+                50000,
+                .5,
                 bot.objects[0],
                 new Vector(6, -4),
                 bot.objects[2],
                 new Vector(0, 0),
             )
         ]);
+        this.wheelMotor = new TorqueGenerator(-100);
+        bot.objects[1].torqueGenerator = this.wheelMotor;
+        bot.objects[2].torqueGenerator = this.wheelMotor;
         this.simulation.addAssembly(bot);
+    }
+
+    onKeyPress(e) {
+        if (e.which == 32) {
+            this.wheelMotor.torque = -this.wheelMotor.torque
+        }
     }
 
     componentWillUnmount() {
@@ -135,7 +146,15 @@ export class GameCanvas extends React.Component<{}, {}> {
 
     render() {
         return <div>
-            <canvas ref="game_canvas" width="800" height="584"/>
+            <canvas
+                ref="game_canvas"
+                width="800"
+                height="584"
+            />
+            <input
+                type="text"
+                onKeyPress={this.onKeyPress.bind(this)}
+            />
         </div>
     }
 }

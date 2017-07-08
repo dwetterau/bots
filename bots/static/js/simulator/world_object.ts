@@ -1,5 +1,6 @@
 import {Vector} from "./vector";
 import {Matrix} from "./matrix";
+import {TorqueGenerator} from "./torque_generator";
 
 export interface RenderingInfo {
     canvasToGridRatio: number
@@ -26,6 +27,8 @@ export class WorldObject {
     forceAccumulator: Vector;
     lastFrameAcceleration: Vector;
     torqueAccumulator: number;
+
+    torqueGenerator: TorqueGenerator;
 
     color: string;
 
@@ -79,6 +82,10 @@ export class WorldObject {
     }
 
     setAngularAcceleration() {
+        if (this.torqueGenerator) {
+            this.torqueGenerator.apply(this);
+        }
+
         this.angularAcceleration = this.torqueAccumulator / this.momentOfInertia();
     }
 
