@@ -70,7 +70,8 @@ export class Disc extends WorldObject {
         return realWorldPoint;
     }
 
-    isInside(p: Vector): boolean {
-        return p.magnitude() <= this.radius;
+    isInside(realWorldPoint: Vector): boolean {
+        let localPoint = this.translateRealWorldPoint(realWorldPoint);
+        return localPoint.magnitude() <= this.radius;
     }
 }

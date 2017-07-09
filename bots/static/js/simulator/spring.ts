@@ -32,6 +32,10 @@ export class Spring {
         displacement.sub(realWorldP1);
         let x = displacement.magnitude() - this.l;
 
+        if (x == -this.l) {
+            // Skip the spring force if the two points overlap.
+            return
+        }
 
         displacement.normalize();
         displacement.scaleInPlace(this.k * x);

@@ -7,6 +7,7 @@ import {Plane} from "../objects/plane";
 import {planeToDiscContact, planeToBoxContact} from "./plane_contact";
 import {Box} from "../objects/box";
 import {boxToDiscContact, boxToBoxContact} from "./box_contact";
+import {Particle} from "../objects/particle";
 
 export interface Contact {
     data: ContactData
@@ -72,12 +73,22 @@ export class ContactGenerator {
             [Disc, Disc],
             [Disc, Plane],
             [Disc, Box],
+            [Disc, Particle],
+
             [Plane, Disc],
             [Plane, Plane],
             [Plane, Box],
+            [Plane, Particle],
+
             [Box, Disc],
             [Box, Plane],
             [Box, Box],
+            [Box, Particle],
+
+            [Particle, Disc],
+            [Particle, Plane],
+            [Particle, Box],
+            [Particle, Particle],
         ];
         let nullGenerator = (o1: WorldObject, o2: WorldObject): Array<ContactData> => {
             return [];
@@ -87,12 +98,22 @@ export class ContactGenerator {
             discToDiscContact,
             this.flip(planeToDiscContact),
             this.flip(boxToDiscContact),
+            nullGenerator,
+
             planeToDiscContact,
             nullGenerator,
             planeToBoxContact,
+            nullGenerator,
+
             boxToDiscContact,
             this.flip(planeToBoxContact),
             boxToBoxContact,
+            nullGenerator,
+
+            nullGenerator,
+            nullGenerator,
+            nullGenerator,
+            nullGenerator,
         ];
 
         for (let [i, [type1, type2]] of typePairs.entries()) {

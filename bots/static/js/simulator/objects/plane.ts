@@ -55,4 +55,12 @@ export class Plane extends WorldObject {
             this.position.b + localPoint.b,
         )
     }
+
+    isInside(realWorldPoint: Vector): boolean {
+        // Note this isn't all that hard:
+        // - Take dot product of point and this.normal
+        // - Take dot product of this.normal and this.position
+        // - Subtract
+        return false
+    }
 }

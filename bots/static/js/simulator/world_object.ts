@@ -148,6 +148,10 @@ export class WorldObject {
     translateLocalPoint(localPoint: Vector): Vector {
         throw Error("Abstract method, subclasses must implement.");
     }
+
+    isInside(realWorldPoint: Vector): boolean {
+        throw Error("Abstract method, subclasses must implement.");
+    }
 }
 
 function getRandomColor() {

@@ -1,16 +1,18 @@
 import * as React from "react";
 import {World} from "../simulator/world";
-import {RenderingInfo} from "../simulator/world_object";
+import {RenderingInfo, WorldObject} from "../simulator/world_object";
 import {Assembly} from "../simulator/assembly";
 import {Box} from "../simulator/objects/box";
 import {Vector} from "../simulator/vector";
 import {Disc} from "../simulator/objects/disc";
 import {Spring} from "../simulator/spring";
 import {TorqueGenerator} from "../simulator/torque_generator";
+import {Particle} from "../simulator/objects/particle";
 
 export class GameCanvas extends React.Component<{}, {}> {
     ctx: CanvasRenderingContext2D = null;
     intervalID: number = null;
+    renderingInfo: RenderingInfo;
 
     // The overall drawing interval for the canvas
     DRAW_INTERVAL: number = 5;
@@ -38,6 +40,18 @@ export class GameCanvas extends React.Component<{}, {}> {
         this.intervalID = setInterval(this.draw.bind(this), this.DRAW_INTERVAL);
         this.simulation = new World(100, gridWidth);
 
+        // Package up the rendering info
+        this.renderingInfo = {
+            canvasToGridRatio: this.canvasToGridRatio,
+            height: this.height,
+            getX: (x: number): number => {
+                return x * this.canvasToGridRatio;
+            },
+            getY: (y: number): number => {
+                return this.height - (y * this.canvasToGridRatio)
+            },
+        };
+
         let bot = this.createBot(new Vector(15, 10));
         this.wheelMotor1 = new TorqueGenerator(-500, 6);
         bot.objects[1].torqueGenerator = this.wheelMotor1;
@@ -50,7 +64,10 @@ export class GameCanvas extends React.Component<{}, {}> {
         bot2.objects[2].torqueGenerator = this.wheelMotor2;
         this.simulation.addAssembly(bot2);
 
-        document.addEventListener("keydown", this.onKeyPress.bind(this))
+        document.addEventListener("keydown", this.onKeyPress.bind(this));
+        canvas.addEventListener("mousedown", this.onMouseDown.bind(this, canvas));
+        canvas.addEventListener("mousemove", this.onMouseMove.bind(this, canvas));
+        canvas.addEventListener("mouseup", this.onMouseUp.bind(this, canvas));
     }
 
     createBot(p: Vector): Assembly {
@@ -131,6 +148,54 @@ export class GameCanvas extends React.Component<{}, {}> {
         }
     }
 
+    dragging = false;
+    draggingSpring: Spring;
+    mouseParticle: WorldObject;
+    onMouseDown(canvas, e) {
+        if (this.dragging) {
+            return
+        }
+        let v = this.getGridVector(canvas, e);
+        let [springPoint, o] = this.simulation.objectUnderPoint(v);
+        if (o != null) {
+            this.mouseParticle = new Particle(v);
+            this.simulation.objects.push(this.mouseParticle);
+
+            this.draggingSpring = new Spring(
+                100,
+                5,
+                this.mouseParticle,
+                new Vector(0, 0),
+                o,
+                springPoint,
+            );
+            this.simulation.springs.push(this.draggingSpring);
+            this.dragging = true;
+        }
+    }
+
+    onMouseMove(canvas, e) {
+        if (this.dragging) {
+            this.mouseParticle.position = this.getGridVector(canvas, e);
+        }
+    }
+
+    onMouseUp(canvas, e) {
+        if (this.dragging) {
+            this.dragging = false;
+            this.simulation.removeObject(this.mouseParticle);
+        }
+    }
+
+    getGridVector(canvas, e): Vector {
+        let x = e.x - canvas.offsetLeft;
+        let y = this.height - (e.y - canvas.offsetTop);
+
+        let gridX = x / this.canvasToGridRatio;
+        let gridY = y / this.canvasToGridRatio;
+        return new Vector(gridX, gridY);
+    }
+
     componentWillUnmount() {
         if (this.intervalID) {
             clearInterval(this.intervalID)
@@ -148,26 +213,14 @@ export class GameCanvas extends React.Component<{}, {}> {
         // Update the world
         this.simulation.moveObjects(this.DRAW_INTERVAL);
 
-        // Package up the rendering info
-        const renderingInfo: RenderingInfo = {
-            canvasToGridRatio: this.canvasToGridRatio,
-            height: this.height,
-            getX: (x: number): number => {
-                return x * renderingInfo.canvasToGridRatio;
-            },
-            getY: (y: number): number => {
-                return renderingInfo.height - (y * renderingInfo.canvasToGridRatio)
-            },
-        };
-
         // Draw each object
         for (let object of this.simulation.objects) {
-            object.drawSelf(this.ctx, renderingInfo);
+            object.drawSelf(this.ctx, this.renderingInfo);
         }
 
         // Draw each spring
         for (let spring of this.simulation.springs) {
-            spring.drawSelf(this.ctx, renderingInfo);
+            spring.drawSelf(this.ctx, this.renderingInfo);
         }
 
         // Draw stats

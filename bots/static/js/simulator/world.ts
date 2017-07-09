@@ -114,6 +114,28 @@ export class World {
         this.contactResolver.resolve(contacts, dt);
     }
 
+    objectUnderPoint(realWorldPoint: Vector): [Vector, WorldObject] {
+        for (let o of this.objects) {
+            if (o.isInside(realWorldPoint)) {
+                return [o.translateRealWorldPoint(realWorldPoint), o]
+            }
+        }
+        return [null, null];
+    }
+
+    removeObject(o: WorldObject) {
+        // Clear out all state involving this object
+        this.springs = this.springs.filter((s: Spring): boolean => {
+            return s.o1.id != o.id && s.o2.id != o.id
+        });
+
+        this.objects = this.objects.filter((cur: WorldObject): boolean => {
+            return cur.id != o.id
+        });
+
+        delete this.objectIDToAssembly[o.id]
+    }
+
     stats(): Array<string> {
         let stats = ["fps: TODO"];
         for (let object of this.objects) {

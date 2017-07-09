@@ -44,6 +44,9 @@ export class Vector {
 
     normalize(): void {
         let mag = this.magnitude();
+        if (mag == 0) {
+            throw Error("Divide by zero error while normalizing vector");
+        }
         this.a /= mag;
         this.b /= mag;
     }

@@ -71,4 +71,12 @@ export class Box extends WorldObject {
         return this.halfX * Math.abs(axis.dot(this.getAxis(0))) +
             this.halfY * Math.abs(axis.dot(this.getAxis(1)))
     }
+
+    isInside(realWorldPoint: Vector): boolean {
+        let localPoint = this.translateRealWorldPoint(realWorldPoint);
+        return (
+            Math.abs(localPoint.a) <= this.halfX
+            && Math.abs(localPoint.b) <= this.halfY
+        );
+    }
 }
