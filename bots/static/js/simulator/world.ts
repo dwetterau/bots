@@ -1,10 +1,8 @@
 import {WorldObject} from "./world_object";
 import {Vector} from "./vector";
-import {Disc} from "./objects/disc";
 import {ContactGenerator} from "./collisions/contact_generator";
 import {ContactResolver} from "./collisions/contact_resolver";
 import {Plane} from "./objects/plane";
-import {Box} from "./objects/box";
 import {Spring} from "./spring";
 import {Assembly} from "./assembly";
 
@@ -33,39 +31,45 @@ export class World {
     constructor(height: number, width:number) {
         this.height = height;
         this.width = width;
+        this.reset();
+    }
 
+    reset() {
+        // TODO(davidw): Reset any state in the generator / resolver
         this.contactGenerator = new ContactGenerator(this);
         this.contactResolver = new ContactResolver(this);
 
+        this.objects = [];
+        this.springs = [];
+        this.assemblies = [];
         this.objectIDToAssembly = {};
-
         this.addWalls();
     }
 
     addWalls() {
         // Bottom wall
         this.objects.push(new Plane(
-            new Vector(50, 0),
+            new Vector(this.width / 2, 0),
             new Vector(0, 1),
-            50,
+            this.width / 2,
         ));
         // Right wall
         this.objects.push(new Plane(
-            new Vector(100, 50),
+            new Vector(this.width, this.height / 2),
             new Vector(-1, 0),
-            50,
+            this.height / 2,
         ));
         // Left wall
         this.objects.push(new Plane(
-            new Vector(0, 50),
+            new Vector(0, this.height / 2),
             new Vector(1, 0),
-            50,
+            this.height / 2,
         ));
         // Top wall
         this.objects.push(new Plane(
-            new Vector(50, 100),
+            new Vector(this.width / 2, this.height),
             new Vector(0, -1),
-            50,
+            this.width / 2,
         ));
     }
 

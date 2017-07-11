@@ -1,13 +1,33 @@
 import * as React from "react";
 import {World} from "../simulator/world";
 import {RenderingInfo, WorldObject} from "../simulator/world_object";
-import {Assembly} from "../simulator/assembly";
-import {Box} from "../simulator/objects/box";
 import {Vector} from "../simulator/vector";
-import {Disc} from "../simulator/objects/disc";
 import {Spring} from "../simulator/spring";
 import {TorqueGenerator} from "../simulator/torque_generator";
 import {Particle} from "../simulator/objects/particle";
+import {Bot, BotSpec} from "../game/bot";
+
+
+const DefaultSpec: BotSpec = {
+    bodySpec: {
+        width: 20,
+        height: 8,
+        mass: 20,
+    },
+    wheelSpec: {
+        radius: 3,
+        mass: 5,
+        offsetX: 5,
+        offsetY: -4,
+    },
+    wheelSpringSpec: {
+        springConstant: 50000,
+        restLength: .5,
+        offsetX: 1,
+        offsetY: 0,
+    },
+};
+
 
 export class GameCanvas extends React.Component<{}, {}> {
     ctx: CanvasRenderingContext2D = null;
@@ -22,8 +42,18 @@ export class GameCanvas extends React.Component<{}, {}> {
     width: number = 0;
     height: number = 0;
     canvasToGridRatio: number = 0;
-    wheelMotor1: TorqueGenerator;
-    wheelMotor2: TorqueGenerator;
+    
+    // Actual game state
+    bots: Array<Bot>;
+    specText: Array<string> = [
+        JSON.stringify(DefaultSpec, null, 4),
+        JSON.stringify(DefaultSpec, null, 4),
+    ];
+    initialOffsetX = 15;
+    initialOffsetY = 10;
+    wheelTorque = 500;
+    wheelGovernor = 6;
+    wheelMotors: Array<TorqueGenerator>;
 
     componentDidMount() {
         let canvas = this.refs['game_canvas'] as HTMLCanvasElement;
@@ -52,17 +82,7 @@ export class GameCanvas extends React.Component<{}, {}> {
             },
         };
 
-        let bot = this.createBot(new Vector(15, 10));
-        this.wheelMotor1 = new TorqueGenerator(-500, 6);
-        bot.objects[1].torqueGenerator = this.wheelMotor1;
-        bot.objects[2].torqueGenerator = this.wheelMotor1;
-        this.simulation.addAssembly(bot);
-
-        let bot2 = this.createBot(new Vector(85, 10));
-        this.wheelMotor2 = new TorqueGenerator(500, 6);
-        bot2.objects[1].torqueGenerator = this.wheelMotor2;
-        bot2.objects[2].torqueGenerator = this.wheelMotor2;
-        this.simulation.addAssembly(bot2);
+        this.resetGame();
 
         document.addEventListener("keydown", this.onKeyPress.bind(this));
         canvas.addEventListener("mousedown", this.onMouseDown.bind(this, canvas));
@@ -70,81 +90,59 @@ export class GameCanvas extends React.Component<{}, {}> {
         canvas.addEventListener("mouseup", this.onMouseUp.bind(this, canvas));
     }
 
-    createBot(p: Vector): Assembly {
-        let bot = new Assembly();
-        bot.setObjects([
-            new Box(
-                p,
-                20,  // mass
-                10,  // halfX
-                4,   // halfY
-            ),
-            new Disc(
-                new Vector(p.a - 5, p.b - 4),
-                5,  // mass
-                3,  // radius
-            ),
-            new Disc(
-                new Vector(p.a + 5, p.b - 4),
-                5,  // mass
-                3,  // radius
-            ),
-        ]);
-        bot.setSprings([
-            new Spring(
-                50000,
-                .5,
-                bot.objects[0],
-                new Vector(-4, -4),
-                bot.objects[1],
-                new Vector(0, 0),
-            ),
-            new Spring(
-                50000,
-                .5,
-                bot.objects[0],
-                new Vector(-6, -4),
-                bot.objects[1],
-                new Vector(0, 0),
-            ),
-            new Spring(
-                50000,
-                .5,
-                bot.objects[0],
-                new Vector(4, -4),
-                bot.objects[2],
-                new Vector(0, 0),
-            ),
-            new Spring(
-                50000,
-                .5,
-                bot.objects[0],
-                new Vector(6, -4),
-                bot.objects[2],
-                new Vector(0, 0),
-            )
-        ]);
-        return bot;
+    resetGame() {
+        let specs = this.parseSpecs();
+        this.bots = [];
+        this.wheelMotors = [
+            new TorqueGenerator(-this.wheelTorque, this.wheelGovernor),
+            new TorqueGenerator(this.wheelTorque, this.wheelGovernor),
+        ];
+        this.simulation.reset();
+
+        // TODO(davidw): Parse the assembly out from an input
+        for (let [i, spec] of specs.entries()) {
+            let x = (i == 1) ? this.simulation.width - this.initialOffsetX: this.initialOffsetX;
+            this.bots.push(new Bot(new Vector(x, this.initialOffsetY), spec));
+            this.bots[i].addWheelMotor(this.wheelMotors[i]);
+            this.simulation.addAssembly(this.bots[i]);
+        }
+    }
+
+    parseSpecs(): Array<BotSpec> {
+        let specs: Array<BotSpec> = [];
+        for (let i of [0, 1]) {
+            let specString: string = (this.refs[`bot${i + 1}_spec`] as HTMLTextAreaElement).value;
+            specs.push(JSON.parse(specString));
+        }
+        return specs;
+    }
+    
+    onSpecChange(botIndex: number, event) {
+        this.specText[botIndex] = event.target.value;
+    }
+
+    onResetPush() {
+        this.resetGame();
     }
 
     onKeyPress(e) {
         // a
         if (e.which == 65) {
-            this.wheelMotor1.torque = Math.abs(this.wheelMotor1.torque)
+            this.wheelMotors[0].torque = Math.abs(this.wheelMotors[0].torque)
         }
         // d
         if (e.which == 68) {
-            this.wheelMotor1.torque = -Math.abs(this.wheelMotor1.torque)
+            this.wheelMotors[0].torque = -Math.abs(this.wheelMotors[0].torque)
         }
 
         // left
         if (e.which == 37) {
-            this.wheelMotor2.torque = Math.abs(this.wheelMotor2.torque)
+            this.wheelMotors[1].torque = Math.abs(this.wheelMotors[1].torque)
         }
 
         // right
         if (e.which == 39) {
-            this.wheelMotor2.torque = -Math.abs(this.wheelMotor2.torque)
+            this.wheelMotors[1].torque = -Math.abs(this.wheelMotors[1].torque)
         }
     }
 
@@ -239,6 +237,25 @@ export class GameCanvas extends React.Component<{}, {}> {
                 width="800"
                 height="584"
             />
+            <div className="bot-containers">
+                <div className="bot-container">
+                    Bot 1 spec
+                    <textarea
+                        ref="bot1_spec"
+                        onChange={this.onSpecChange.bind(this, 0)}
+                        defaultValue={this.specText[0]}
+                    />
+                </div>
+                <div className="bot-container">
+                    Bot 2 spec
+                    <textarea
+                        ref="bot2_spec"
+                        onChange={this.onSpecChange.bind(this, 1)}
+                        defaultValue={this.specText[1]}
+                    />
+                </div>
+            </div>
+            <input type="button" onClick={this.onResetPush.bind(this)} value="Reset" />
         </div>
     }
 }

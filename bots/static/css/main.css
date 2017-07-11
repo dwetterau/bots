@@ -9,3 +9,19 @@ body {
     background: #f6f9fc;
     margin: 0;
 }
+
+.bot-containers {
+    display: flex;
+    justify-content: space-between;
+    height: 300px;
+}
+
+.bot-containers .bot-container {
+    display: flex;
+    flex-direction: column;
+    width: 50%
+}
+
+.bot-containers .bot-container textarea {
+    flex-grow: 1;
+}
