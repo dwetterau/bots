@@ -141,7 +141,7 @@ export class World {
     }
 
     stats(): Array<string> {
-        let stats = ["fps: TODO"];
+        let stats = [];
         for (let object of this.objects) {
             if (object instanceof Plane) {
                 continue

@@ -35,7 +35,7 @@ export class GameCanvas extends React.Component<{}, {}> {
     renderingInfo: RenderingInfo;
 
     // The overall drawing interval for the canvas
-    DRAW_INTERVAL: number = 5;
+    DRAW_INTERVAL: number = 10;
 
     // The simulation we are rendering
     simulation: World = null;
@@ -50,7 +50,7 @@ export class GameCanvas extends React.Component<{}, {}> {
         JSON.stringify(DefaultSpec, null, 4),
     ];
     initialOffsetX = 15;
-    initialOffsetY = 10;
+    initialOffsetY = 5;
     wheelTorque = 500;
     wheelGovernor = 6;
     wheelMotors: Array<TorqueGenerator>;
@@ -102,7 +102,8 @@ export class GameCanvas extends React.Component<{}, {}> {
         // TODO(davidw): Parse the assembly out from an input
         for (let [i, spec] of specs.entries()) {
             let x = (i == 1) ? this.simulation.width - this.initialOffsetX: this.initialOffsetX;
-            this.bots.push(new Bot(new Vector(x, this.initialOffsetY), spec));
+            let y = this.initialOffsetY + spec.bodySpec.height / 2 + spec.wheelSpec.radius;
+            this.bots.push(new Bot(new Vector(x, y), spec));
             this.bots[i].addWheelMotor(this.wheelMotors[i]);
             this.simulation.addAssembly(this.bots[i]);
         }
@@ -204,12 +205,28 @@ export class GameCanvas extends React.Component<{}, {}> {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
 
+    timingTotals = {
+        physicsTime: 0,
+        drawTime: 0,
+        waitTime: 0,
+        lastTime: 0,
+        frames: 0,
+    };
     draw() {
+        let timingStats = {
+            startTime: new Date().getTime(),
+            clearTime: 0,
+            physicsTime: 0,
+            drawTime: 0,
+        };
+
         // Clear the last frame
         this.clear();
+        timingStats.clearTime = new Date().getTime();
 
         // Update the world
         this.simulation.moveObjects(this.DRAW_INTERVAL);
+        timingStats.physicsTime = new Date().getTime();
 
         // Draw each object
         for (let object of this.simulation.objects) {
@@ -220,14 +237,39 @@ export class GameCanvas extends React.Component<{}, {}> {
         for (let spring of this.simulation.springs) {
             spring.drawSelf(this.ctx, this.renderingInfo);
         }
+        timingStats.drawTime = new Date().getTime();
+
+        let physicsTime = timingStats.physicsTime - timingStats.clearTime;
+        let drawTime = timingStats.drawTime - timingStats.physicsTime;
+        drawTime += timingStats.clearTime - timingStats.startTime;
+
+        if (this.timingTotals.lastTime != 0) {
+            this.timingTotals.waitTime += timingStats.startTime - this.timingTotals.lastTime
+        }
+        this.timingTotals.physicsTime += physicsTime;
+        this.timingTotals.drawTime += drawTime;
 
         // Draw stats
         this.ctx.fillStyle = "#000000";
         let y = 10;
+
+        let total = this.timingTotals.physicsTime
+            + this.timingTotals.drawTime
+            + this.timingTotals.waitTime;
+        let pPerc = Math.round(this.timingTotals.physicsTime / total * 100);
+        let dPerc = Math.round(this.timingTotals.drawTime / total * 100);
+        let wPerc = Math.round(this.timingTotals.waitTime / total * 100);
+        let fps = Math.round(this.timingTotals.frames * 1000 / total);
+        this.ctx.fillText(`fps: ${fps} phys:${pPerc}% draw:${dPerc}% wait:${wPerc}%`, 10, y);
+        y += 10;
+
         for (let stats of this.simulation.stats()) {
             this.ctx.fillText(stats, 10, y);
             y += 10;
         }
+
+        this.timingTotals.lastTime = new Date().getTime();
+        this.timingTotals.frames += 1;
     }
 
     render() {
