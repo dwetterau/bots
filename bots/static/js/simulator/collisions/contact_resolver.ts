@@ -41,17 +41,17 @@ class PreparedContact {
             this.contact.data.contactPoint.copy(),
             this.contact.data.contactPoint.copy(),
         ];
-        this.relativeContactPosition[0].sub(world.objects[contact.object1Index].position);
-        this.relativeContactPosition[1].sub(world.objects[contact.object2Index].position);
+        this.relativeContactPosition[0].sub(world.idToObject[contact.object1Id].position);
+        this.relativeContactPosition[1].sub(world.idToObject[contact.object2Id].position);
 
         this.contactVelocity = this.calculateLocalVelocity(
             0,
-            world.objects[contact.object1Index],
+            world.idToObject[contact.object1Id],
             duration,
         );
         this.contactVelocity.sub(this.calculateLocalVelocity(
             1,
-            world.objects[contact.object2Index],
+            world.idToObject[contact.object2Id],
             duration,
         ));
 
@@ -78,8 +78,8 @@ class PreparedContact {
     }
 
     calculateDesiredDeltaVelocity(world: World, duration: number) {
-        let o1 = world.objects[this.contact.object1Index];
-        let o2 = world.objects[this.contact.object2Index];
+        let o1 = world.idToObject[this.contact.object1Id];
+        let o2 = world.idToObject[this.contact.object2Id];
 
         let velocityFromAcceleration = o1.lastFrameAcceleration
             .scale(duration)
@@ -110,8 +110,8 @@ class PreparedContact {
         let angularInertia = [0, 0];
 
         let objects = [
-            world.objects[this.contact.object1Index],
-            world.objects[this.contact.object2Index],
+            world.idToObject[this.contact.object1Id],
+            world.idToObject[this.contact.object2Id],
         ];
 
         for (let [i, o] of objects.entries()) {
@@ -178,10 +178,10 @@ class PreparedContact {
         // Transform impulse to world coordinates
         let impulse = this.contactToWorld.transform(impulseContact);
 
-        for (let [i, objectIndex] of [
-            this.contact.object1Index, this.contact.object2Index
+        for (let [i, objectId] of [
+            this.contact.object1Id, this.contact.object2Id
         ].entries()) {
-            let o = world.objects[objectIndex];
+            let o = world.idToObject[objectId];
 
             let impulsiveTorque: number;
             if (i == 0) {
@@ -209,10 +209,10 @@ class PreparedContact {
 
     calculateFrictionlessImpulse(world: World): Vector {
         let deltaV = 0;
-        for (let [i, objectIndex] of [
-            this.contact.object1Index, this.contact.object2Index
+        for (let [i, objectId] of [
+            this.contact.object1Id, this.contact.object2Id
         ].entries()) {
-            let o = world.objects[objectIndex];
+            let o = world.idToObject[objectId];
 
             let torquePerUnitImpulse = this.relativeContactPosition[i]
                 .cross(this.contact.data.contactNormal);
@@ -238,10 +238,10 @@ class PreparedContact {
 
     calculateFrictionImpulse(world: World): Vector {
         let impulseUnitToContactVelocityFunctions = [];
-        for (let [i, objectIndex] of [
-            this.contact.object1Index, this.contact.object2Index
+        for (let [i, objectId] of [
+            this.contact.object1Id, this.contact.object2Id
         ].entries()) {
-            let o = world.objects[objectIndex];
+            let o = world.idToObject[objectId];
 
             impulseUnitToContactVelocityFunctions.push(function (impulseDirection: Vector): Vector {
                 let worldImpulseDirection = this.contactToWorld.transform(impulseDirection);
@@ -292,8 +292,8 @@ class PreparedContact {
 
 export class ContactResolver {
 
-    maxPositionIterations = 100;
-    maxVelocityIterations = 1000;
+    maxPositionIterations = 10000;
+    maxVelocityIterations = 10000;
     velocityEpsilon = 0.001;
 
     world: World;
@@ -344,20 +344,20 @@ export class ContactResolver {
             // Resolve all of the penetrations of the other objects
             for (let c of contacts) {
                 for (let b of [0, 1]) {
-                    let thisObjectIndex = c.contact.object1Index;
+                    let thisObjectId = c.contact.object1Id;
                     if (b == 1) {
-                        thisObjectIndex = c.contact.object2Index;
+                        thisObjectId = c.contact.object2Id;
                     }
 
                     for (let d of [0, 1]) {
-                        let resolvedObjectIndex = contacts[maxIndex]
-                            .contact.object1Index;
+                        let resolvedObjectId = contacts[maxIndex]
+                            .contact.object1Id;
                         if (d == 1) {
-                            resolvedObjectIndex = contacts[maxIndex]
-                                .contact.object2Index;
+                            resolvedObjectId = contacts[maxIndex]
+                                .contact.object2Id;
                         }
 
-                        if (thisObjectIndex == resolvedObjectIndex) {
+                        if (thisObjectId == resolvedObjectId) {
                             let deltaPosition = positionChangeInfo.linearChanges[d].copy();
                             deltaPosition.add(
                                 Matrix.fromRotation(
@@ -402,20 +402,20 @@ export class ContactResolver {
             // Compute the relative closing velocities as needed
             for (let c of contacts) {
                 for (let b of [0, 1]) {
-                    let thisObjectIndex = c.contact.object1Index;
+                    let thisObjectId = c.contact.object1Id;
                     if (b == 1) {
-                        thisObjectIndex = c.contact.object2Index;
+                        thisObjectId = c.contact.object2Id;
                     }
 
                     for (let d of [0, 1]) {
-                        let resolvedObjectIndex = contacts[maxIndex]
-                            .contact.object1Index;
+                        let resolvedObjectId = contacts[maxIndex]
+                            .contact.object1Id;
                         if (d == 1) {
-                            resolvedObjectIndex = contacts[maxIndex]
-                                .contact.object2Index;
+                            resolvedObjectId = contacts[maxIndex]
+                                .contact.object2Id;
                         }
 
-                        if (thisObjectIndex == resolvedObjectIndex) {
+                        if (thisObjectId == resolvedObjectId) {
                             let deltaV = velocityChangeInfo.velocityChanges[d].copy();
                             deltaV.add(
                                 new Vector(

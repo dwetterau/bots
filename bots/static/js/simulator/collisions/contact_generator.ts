@@ -1,6 +1,6 @@
 import {Vector} from "../vector";
 import {World} from "../world";
-import {WorldObject} from "../world_object";
+import {WorldObject, WorldObjectID} from "../world_object";
 import {Disc} from "../objects/disc";
 import {discToDiscContact} from "./disc_contact";
 import {Plane} from "../objects/plane";
@@ -11,8 +11,8 @@ import {Particle} from "../objects/particle";
 
 export interface Contact {
     data: ContactData
-    object1Index: number
-    object2Index: number
+    object1Id: WorldObjectID
+    object2Id: WorldObjectID
 }
 
 export interface ContactData{
@@ -45,10 +45,21 @@ export class ContactGenerator {
                 for (let contact of this.computeContactData(o1, o2)) {
                     contacts.push({
                         data: contact,
-                        object1Index: i,
-                        object2Index: j,
+                        object1Id: o1.id,
+                        object2Id: o2.id,
                     })
                 }
+            }
+        }
+
+        // Examine the joints for contacts
+        for (let j of this.world.joints) {
+            if (j.exceedsThreshold()) {
+                contacts.push({
+                    data: j.generateContact(),
+                    object1Id: j.o1.id,
+                    object2Id: j.o2.id,
+                })
             }
         }
 

@@ -20,12 +20,6 @@ const DefaultSpec: BotSpec = {
         offsetX: 5,
         offsetY: -4,
     },
-    wheelSpringSpec: {
-        springConstant: 50000,
-        restLength: .5,
-        offsetX: 1,
-        offsetY: 0,
-    },
 };
 
 
@@ -158,7 +152,7 @@ export class GameCanvas extends React.Component<{}, {}> {
         let [springPoint, o] = this.simulation.objectUnderPoint(v);
         if (o != null) {
             this.mouseParticle = new Particle(v);
-            this.simulation.objects.push(this.mouseParticle);
+            this.simulation.addObject(this.mouseParticle);
 
             this.draggingSpring = new Spring(
                 100,

@@ -5,6 +5,7 @@ import {ContactResolver} from "./collisions/contact_resolver";
 import {Plane} from "./objects/plane";
 import {Spring} from "./spring";
 import {Assembly} from "./assembly";
+import {Joint} from "./collisions/joint";
 
 export class World {
 
@@ -20,6 +21,8 @@ export class World {
     width: number = 0;
     gravityDirection: Vector = new Vector(0, -1);
     objects: Array<WorldObject> = [];
+    idToObject: {[objectID: string]: WorldObject};
+    joints: Array<Joint> = [];
     springs: Array<Spring> = [];
     assemblies: Array<Assembly> = [];
     objectIDToAssembly: {[objectID: string]: Assembly};
@@ -40,6 +43,8 @@ export class World {
         this.contactResolver = new ContactResolver(this);
 
         this.objects = [];
+        this.idToObject = {};
+        this.joints = [];
         this.springs = [];
         this.assemblies = [];
         this.objectIDToAssembly = {};
@@ -48,39 +53,50 @@ export class World {
 
     addWalls() {
         // Bottom wall
-        this.objects.push(new Plane(
+        this.addObject(new Plane(
             new Vector(this.width / 2, 0),
             new Vector(0, 1),
             this.width / 2,
         ));
         // Right wall
-        this.objects.push(new Plane(
+        this.addObject(new Plane(
             new Vector(this.width, this.height / 2),
             new Vector(-1, 0),
             this.height / 2,
         ));
         // Left wall
-        this.objects.push(new Plane(
+        this.addObject(new Plane(
             new Vector(0, this.height / 2),
             new Vector(1, 0),
             this.height / 2,
         ));
         // Top wall
-        this.objects.push(new Plane(
+        this.addObject(new Plane(
             new Vector(this.width / 2, this.height),
             new Vector(0, -1),
             this.width / 2,
         ));
     }
 
+    addObject(o: WorldObject) {
+        if (this.idToObject[o.id]) {
+            throw Error("Already have object with this id:" + o.id)
+        }
+        this.objects.push(o);
+        this.idToObject[o.id] = o;
+    }
+
     addAssembly(a: Assembly) {
         this.assemblies.push(a);
         for (let o of a.objects) {
             this.objectIDToAssembly[o.id] = a;
-            this.objects.push(o)
+            this.addObject(o);
         }
         for (let s of a.springs) {
             this.springs.push(s)
+        }
+        for (let j of a.joints) {
+            this.joints.push(j)
         }
     }
 
@@ -137,6 +153,7 @@ export class World {
             return cur.id != o.id
         });
 
+        delete this.idToObject[o.id];
         delete this.objectIDToAssembly[o.id]
     }
 

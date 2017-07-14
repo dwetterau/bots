@@ -2,13 +2,12 @@ import {Assembly} from "../simulator/assembly";
 import {Vector} from "../simulator/vector";
 import {Box} from "../simulator/objects/box";
 import {Disc} from "../simulator/objects/disc";
-import {Spring} from "../simulator/spring";
 import {TorqueGenerator} from "../simulator/torque_generator";
+import {Joint} from "../simulator/collisions/joint";
 
 export interface BotSpec {
     bodySpec: BodySpec
     wheelSpec: WheelSpec
-    wheelSpringSpec: WheelSpringSpec
 }
 
 export interface BodySpec {
@@ -24,12 +23,7 @@ export interface WheelSpec {
     offsetY: number,
 }
 
-export interface WheelSpringSpec {
-    springConstant: number,
-    restLength: number,
-    offsetX: number,
-    offsetY: number,
-}
+const AXLE_TOLERANCE = 0.01;
 
 export class Bot extends Assembly {
 
@@ -54,24 +48,18 @@ export class Bot extends Assembly {
                 spec.wheelSpec.radius,
             ),
         ]);
-        let springs: Array<Spring> = [];
+        let joints: Array<Joint> = [];
         for (let o of [0, 1]) {
             let oSign = ((o == 0) ? -1 : 1);
-            for (let s of [-1, 1]) {
-                springs.push(new Spring(
-                    spec.wheelSpringSpec.springConstant,
-                    spec.wheelSpringSpec.restLength,
-                    this.objects[0],
-                    new Vector(
-                        oSign * spec.wheelSpec.offsetX + s * spec.wheelSpringSpec.offsetX,
-                        spec.wheelSpec.offsetY + spec.wheelSpringSpec.offsetY,
-                    ),
-                    this.objects[o + 1],
-                    new Vector(0, 0),
-                ));
-            }
+            joints.push(new Joint(
+                AXLE_TOLERANCE,
+                this.objects[0],
+                new Vector(oSign * spec.wheelSpec.offsetX, spec.wheelSpec.offsetY),
+                this.objects[o + 1],
+                new Vector(0, 0),
+            ));
         }
-        super.setSprings(springs);
+        super.setJoints(joints);
     }
 
     addWheelMotor(tg: TorqueGenerator) {
