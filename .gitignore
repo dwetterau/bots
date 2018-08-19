@@ -6,6 +6,6 @@ node_modules/
 site.db
 *.log
 .DS_Store
-bots/static/dist/dev
+static/dist/dev
 .mypy_cache
 index.txt

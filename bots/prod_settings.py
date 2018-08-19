@@ -16,15 +16,15 @@ import os
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATICFILES_DIRS = (
-    os.path.join(PROJECT_DIR, 'static/'),
+    os.path.join(PROJECT_DIR, '../static/'),
 
     # 3rd party libraries we don't bundle for caching reasons
-    os.path.join(PROJECT_DIR, 'node_modules/react/dist/'),
-    os.path.join(PROJECT_DIR, 'node_modules/react-dom/dist/'),
-    os.path.join(PROJECT_DIR, 'node_modules/jquery/dist/'),
-    os.path.join(PROJECT_DIR, 'node_modules/moment/min/'),
-    os.path.join(PROJECT_DIR, 'node_modules/react-router/umd/'),
-    os.path.join(PROJECT_DIR, 'node_modules/react-router-dom/umd/'),
+    os.path.join(PROJECT_DIR, '../node_modules/react/umd/'),
+    os.path.join(PROJECT_DIR, '../node_modules/react-dom/umd/'),
+    os.path.join(PROJECT_DIR, '../node_modules/jquery/dist/'),
+    os.path.join(PROJECT_DIR, '../node_modules/moment/min/'),
+    os.path.join(PROJECT_DIR, '../node_modules/react-router/umd/'),
+    os.path.join(PROJECT_DIR, '../node_modules/react-router-dom/umd/'),
     # WARNING: Don't forget to also update the prod settings!
 )
 STATIC_ROOT = '/www/bots/static'

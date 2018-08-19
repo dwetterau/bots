@@ -13,10 +13,10 @@ module.exports = {
     },
 
     module: {
-        loaders: [
+        rules: [
             // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
             // and then they will be handled by the babel loader to compile down to es5.
-            {test: /\.tsx?$/, loader: "babel-loader?presets[]=es2015!ts-loader"},
+            {test: /\.tsx?$/, loader: "ts-loader"},
             {test: /\.css$/, loader: "style-loader!css-loader"}
         ]
     },
@@ -32,5 +32,6 @@ module.exports = {
         "moment": "moment",
         "react-router": "ReactRouter",
         "react-router-dom": "ReactRouterDOM"
-    }
+    },
+    mode: "development"
 };
