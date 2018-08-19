@@ -6,6 +6,7 @@ import {Spring} from "../simulator/spring";
 import {TorqueGenerator} from "../simulator/torque_generator";
 import {Particle} from "../simulator/objects/particle";
 import {Bot, BotSpec} from "../game/bot";
+import {Weapon} from "../game/weapon";
 
 
 const DefaultSpec: BotSpec = {
@@ -48,6 +49,7 @@ export class GameCanvas extends React.Component<{}, {}> {
     wheelTorque = 500;
     wheelGovernor = 6;
     wheelMotors: Array<TorqueGenerator>;
+    weapons: Array<Weapon>;
 
     componentDidMount() {
         let canvas = this.refs['game_canvas'] as HTMLCanvasElement;
@@ -91,6 +93,7 @@ export class GameCanvas extends React.Component<{}, {}> {
             new TorqueGenerator(-this.wheelTorque, this.wheelGovernor),
             new TorqueGenerator(this.wheelTorque, this.wheelGovernor),
         ];
+        this.weapons = [];
         this.simulation.reset();
 
         // TODO(davidw): Parse the assembly out from an input
@@ -101,6 +104,23 @@ export class GameCanvas extends React.Component<{}, {}> {
             this.bots[i].addWheelMotor(this.wheelMotors[i]);
             this.simulation.addAssembly(this.bots[i]);
         }
+
+        /*
+        // hackily add a weapon...
+        this.weapons.push(new Weapon(
+            {
+                reloadTime: 1,
+                muzzleSpeed: 80,
+                projectileSpec: {
+                    height: .2,
+                    length: 1,
+                },
+            },
+            this.bots[0].objects[0],
+            new Vector(specs[0].bodySpec.width / 2, specs[0].bodySpec.height / 2),
+            Math.PI / 4,
+        ));
+        */
     }
 
     parseSpecs(): Array<BotSpec> {
@@ -219,7 +239,16 @@ export class GameCanvas extends React.Component<{}, {}> {
         timingStats.clearTime = new Date().getTime();
 
         // Update the world
-        this.simulation.moveObjects(this.DRAW_INTERVAL);
+        let dt = this.DRAW_INTERVAL / 1000.0;
+        // Fire the weapons
+        for (let w of this.weapons) {
+            let possibleProjectile = w.fire(dt);
+            if (possibleProjectile != null) {
+                console.log(possibleProjectile);
+                this.simulation.addAssembly(possibleProjectile)
+            }
+        }
+        this.simulation.moveObjects(dt);
         timingStats.physicsTime = new Date().getTime();
 
         // Draw each object

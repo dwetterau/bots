@@ -116,7 +116,7 @@ class PreparedContact {
 
         for (let [i, o] of objects.entries()) {
             linearInertia[i] = o.inverseMass();
-            angularInertia[i] = (
+            angularInertia[i] = Math.abs(
                 this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
                 / o.momentOfInertia()
             );
@@ -335,6 +335,10 @@ export class ContactResolver {
             }
             if (maxPenetration < this.world.Tolerance) {
                 break
+            }
+
+            if (maxPenetration > .2) {
+                //debugger;
             }
 
             // Resolve the penetration

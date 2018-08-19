@@ -23,7 +23,7 @@ export interface WheelSpec {
     offsetY: number,
 }
 
-const AXLE_TOLERANCE = 0.01;
+const AXLE_TOLERANCE = 0.1;
 
 export class Bot extends Assembly {
 

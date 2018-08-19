@@ -100,8 +100,7 @@ export class World {
         }
     }
 
-    moveObjects(timestep: number) {
-        let dt = timestep / 1000.0;
+    moveObjects(dt: number) {
         let gravity = this.gravityDirection.scale(this.Gravity);
 
         for (let object of this.objects) {
