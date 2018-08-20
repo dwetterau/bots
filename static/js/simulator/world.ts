@@ -165,7 +165,7 @@ export class World {
             stats.push(
                 `p: (${object.position.a.toFixed(2)}, ` +
                 `${object.position.b.toFixed(2)}) ` +
-                `theta: ${object.rotation.toFixed(3)}`
+                `theta: ${object.rotation.toTheta().toFixed(3)}`
             )
         }
         return stats;

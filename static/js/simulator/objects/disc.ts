@@ -23,7 +23,7 @@ export class Disc extends WorldObject {
         let x = renderingInfo.getX(this.position.a);
         let y = renderingInfo.getY(this.position.b);
         ctx.translate(x, y);
-        let canvasRotation = Math.PI * 2 - this.rotation;
+        let canvasRotation = Math.PI * 2 - this.rotation.toTheta();
         ctx.rotate(canvasRotation);
 
         let radiusHeight = Math.round(this.radius * renderingInfo.canvasToGridRatio);

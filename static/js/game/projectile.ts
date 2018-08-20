@@ -4,6 +4,7 @@ import {Disc} from "../simulator/objects/disc";
 import {Box} from "../simulator/objects/box";
 import {WorldObject} from "../simulator/world_object";
 import {Joint} from "../simulator/collisions/joint";
+import {Complex} from "../simulator/complex";
 
 export interface ProjectileSpec {
     height: number;
@@ -12,7 +13,7 @@ export interface ProjectileSpec {
 
 export class Projectile extends Assembly {
 
-    constructor(spawnPosition: Vector,  rotation: number, speed: number, spec: ProjectileSpec) {
+    constructor(spawnPosition: Vector,  rotation: Complex, speed: number, spec: ProjectileSpec) {
         super();
         this.validateSpec(spec);
 
@@ -32,11 +33,7 @@ export class Projectile extends Assembly {
         ];
 
         for (let o of objects) {
-            o.velocity = new Vector(
-                Math.cos(rotation),
-                Math.sin(rotation),
-            ).scale(speed);
-            //o.rotation = rotation;
+            o.velocity = Vector.fromRotation(rotation).scale(speed);
         }
         this.setObjects(objects);
         if (objects.length > 1) {

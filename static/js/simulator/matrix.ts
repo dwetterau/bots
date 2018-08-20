@@ -1,4 +1,6 @@
+import {Complex} from "./complex";
 import {Vector} from "./vector";
+
 export class Matrix {
     // First char = row, Second char = col
     aa: number;
@@ -29,10 +31,10 @@ export class Matrix {
         )
     }
 
-    static fromRotation(theta: number): Matrix {
+    static fromRotation(c: Complex): Matrix {
         return new Matrix(
-            Math.cos(theta), -Math.sin(theta),
-            Math.sin(theta), Math.cos(theta),
+            c.a, -c.b,
+            c.b, c.a,
         )
     }
 }

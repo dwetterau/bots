@@ -1,6 +1,6 @@
 import {Vector} from "./vector";
-import {Matrix} from "./matrix";
 import {TorqueGenerator} from "./torque_generator";
+import {Complex} from "./complex";
 
 export interface RenderingInfo {
     canvasToGridRatio: number
@@ -19,7 +19,7 @@ export class WorldObject {
     acceleration: Vector;
     mass: number;
 
-    rotation: number;
+    rotation: Complex;
     angularVelocity: number;
     angularAcceleration: number;
 
@@ -41,7 +41,7 @@ export class WorldObject {
         this.acceleration = new Vector(0, 0);
         this.mass = m;
 
-        this.rotation = 0;
+        this.rotation = new Complex(1, 0);
         this.angularVelocity = 0;
 
         this.color = getRandomColor()
@@ -96,18 +96,14 @@ export class WorldObject {
     }
 
     updateRotation(dt: number) {
-        this.setRotation(this.rotation + this.angularVelocity * dt);
+        this.setRotation(this.angularVelocity * dt);
     }
 
-    setRotation(newRotation: number) {
-        this.rotation = newRotation;
-
-        // Clamp the rotation in radians
-        if (this.rotation < 0) {
-            this.rotation += Math.PI * 2;
-        } else if (this.rotation > Math.PI * 2) {
-            this.rotation -= Math.PI * 2;
-        }
+    setRotation(delta: number) {
+        this.rotation = this.rotation.rotate(Complex.fromRotation(
+           delta
+        ));
+        this.rotation.normalize();
     }
 
     applyDrag(dt: number) {

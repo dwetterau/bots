@@ -3,6 +3,7 @@ import {Contact} from "./contact_generator";
 import {Vector} from "../vector";
 import {Matrix} from "../matrix";
 import {WorldObject} from "../world_object";
+import {Complex} from "../complex";
 
 interface PositionChangeInfo {
     linearChanges: Array<Vector>
@@ -158,7 +159,7 @@ class PreparedContact {
 
             // Apply the actual movements
             o.position.add(linearChanges[i]);
-            o.setRotation(o.rotation + angularChanges[i]);
+            o.setRotation(angularChanges[i]);
         }
 
         return {
@@ -173,6 +174,7 @@ class PreparedContact {
 
         // TODO(davidw): Switch methods when friction is 0
         // let impulseContact = this.calculateFrictionlessImpulse(world);
+        // TODO: Switch back when it's right
         let impulseContact = this.calculateFrictionImpulse(world);
 
         // Transform impulse to world coordinates
@@ -236,6 +238,7 @@ class PreparedContact {
         );
     }
 
+    // TODO: I think all of this is wrong
     calculateFrictionImpulse(world: World): Vector {
         let impulseUnitToContactVelocityFunctions = [];
         for (let [i, objectId] of [
@@ -337,10 +340,6 @@ export class ContactResolver {
                 break
             }
 
-            if (maxPenetration > .2) {
-                //debugger;
-            }
-
             // Resolve the penetration
             let positionChangeInfo = contacts[maxIndex]
                 .applyPositionChange(this.world, maxPenetration);
@@ -365,7 +364,7 @@ export class ContactResolver {
                             let deltaPosition = positionChangeInfo.linearChanges[d].copy();
                             deltaPosition.add(
                                 Matrix.fromRotation(
-                                    positionChangeInfo.angularChanges[d]
+                                    Complex.fromRotation(positionChangeInfo.angularChanges[d]),
                                 ).transform(
                                     c.relativeContactPosition[b]
                                 )

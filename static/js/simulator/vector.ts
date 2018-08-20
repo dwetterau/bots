@@ -1,3 +1,5 @@
+import {Complex} from "./complex";
+
 export class Vector {
     a: number = 0;
     b: number = 0;
@@ -63,5 +65,9 @@ export class Vector {
 
     scale(n: number): Vector {
         return new Vector(this.a * n, this.b * n);
+    }
+
+    static fromRotation(c: Complex): Vector {
+        return new Vector(c.a, c.b);
     }
 }

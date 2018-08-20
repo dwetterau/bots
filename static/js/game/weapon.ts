@@ -2,6 +2,7 @@
 import {Projectile, ProjectileSpec} from "./projectile";
 import {Vector} from "../simulator/vector";
 import {WorldObject} from "../simulator/world_object";
+import {Complex} from "../simulator/complex";
 
 export interface WeaponSpec {
     reloadTime: number;
@@ -17,10 +18,10 @@ export class Weapon {
 
     object: WorldObject;
     localPosition: Vector;
-    localRotation: number;
+    localRotation: Complex;
 
     // TODO(davidw): Figure out how we're going to delete these...
-    constructor(spec: WeaponSpec, o: WorldObject, p: Vector, rotation: number) {
+    constructor(spec: WeaponSpec, o: WorldObject, p: Vector, rotation: Complex) {
         // On creation, we register this as the lastFireTime
         this.lastFireTime = 0;
         this.currentTime = 0;
@@ -40,7 +41,7 @@ export class Weapon {
         this.lastFireTime = this.currentTime;
 
         // Spawn a new projectile
-        let r = this.localRotation + this.object.rotation;
+        let r = this.localRotation.rotate(this.object.rotation);
         return new Projectile(
             this.object.translateLocalPoint(this.localPosition),
             r,
