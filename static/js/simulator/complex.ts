@@ -28,13 +28,26 @@ export class Complex {
         if (this.a == 0) {
             if (this.b > 0) {
                 return Math.PI / 2
-            } else if (this.b < 0) {
-                return -Math.PI / 2
+            } else {
+                return 3 * Math.PI / 2
+            }
+        }
+        if (this.b == 0) {
+            if (this.a < 0) {
+               return Math.PI
             } else {
                 return 0;
             }
         }
-        return Math.atan(this.b / this.a);
+        let atan = Math.atan(this.b / this.a);
+        if (this.a > 0) {
+            if (this.b < 0) {
+                return 2 * Math.PI + atan;
+            } else {
+                return atan;
+            }
+        }
+        return Math.PI + atan;
     }
 
     static fromRotation(theta: number) {
