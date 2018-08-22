@@ -30,7 +30,7 @@ export class GameCanvas extends React.Component<{}, {}> {
     renderingInfo: RenderingInfo;
 
     // The overall drawing interval for the canvas
-    DRAW_INTERVAL: number = 10;
+    DRAW_INTERVAL: number = 16;
 
     // The simulation we are rendering
     simulation: World = null;
@@ -239,7 +239,10 @@ export class GameCanvas extends React.Component<{}, {}> {
         timingStats.clearTime = new Date().getTime();
 
         // Update the world
+        // Note: This couples together the physics time and the drawing time. We could
+        // update the physics more accurately and draw separately.
         let dt = this.DRAW_INTERVAL / 1000.0;
+        /*
         // Fire the weapons
         for (let w of this.weapons) {
             let possibleProjectile = w.fire(dt);
@@ -248,6 +251,7 @@ export class GameCanvas extends React.Component<{}, {}> {
                 this.simulation.addAssembly(possibleProjectile)
             }
         }
+        */
         this.simulation.moveObjects(dt);
         timingStats.physicsTime = new Date().getTime();
 
