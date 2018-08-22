@@ -44,6 +44,7 @@ export class WorldObject {
         this.rotation = new Complex(1, 0);
         this.angularVelocity = 0;
 
+        // TODO: This belongs up a level
         this.color = getRandomColor()
     }
 

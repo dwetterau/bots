@@ -27,13 +27,10 @@ export class Vector {
         return this.a * v.a + this.b * v.b;
     }
 
+    // TODO: Remove this function
+    // DEPRECATED: Remove this function
     cross(v: Vector): number {
         return this.a * v.b - this.b * v.a;
-    }
-
-    proj(v: Vector): Vector {
-        let fraction = this.dot(v);
-        return new Vector(v.a * fraction, v.b * fraction);
     }
 
     squareMagnitude(): number {

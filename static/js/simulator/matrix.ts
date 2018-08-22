@@ -15,16 +15,16 @@ export class Matrix {
         this.bb = bb;
     }
 
+    // For a matrix A and vector b, returns c for A * b = c
     transform(v: Vector): Vector {
-        // For a matrix A and vector b, returns c for A * b = c
         return new Vector(
             this.aa * v.a + this.ab * v.b,
             this.ba * v.a + this.bb * v.b,
         )
     }
 
+    // For a matrix A and vector b, returns c for A^T * b = c
     transformTranspose(v: Vector): Vector {
-        // For a matrix A and vector b, returns c for A^T * b = c
         return new Vector(
             this.aa * v.a + this.ba * v.b,
             this.ab * v.a + this.bb * v.b,

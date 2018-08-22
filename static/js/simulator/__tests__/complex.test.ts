@@ -1,4 +1,5 @@
-import {Complex} from "../simulator/complex";
+import {Complex} from "../complex";
+import {equalC, equalN} from "./helpers";
 
 test("rotate", () => {
     // 90 degree rotations
@@ -60,13 +61,3 @@ test("theta", () => {
     expect(equalN(sixty.rotate(half).toTheta(), 4 * Math.PI / 3)).toBeTruthy();
     expect(equalN(sixty.rotate(threeQuarter).toTheta(), 11 * Math.PI / 6)).toBeTruthy();
 });
-
-let eps = 1e-10;
-
-function equalC(c1: Complex, c2: Complex): boolean {
-    return equalN(c1.a, c2.a) && equalN(c1.b, c2.b);
-}
-
-function equalN(n1: number, n2: number): boolean {
-    return n1 == n2 || Math.abs(n1 - n2) < eps
-}
