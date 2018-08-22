@@ -19,24 +19,25 @@ test("add and subtract", () => {
 });
 
 test("dot", () => {
-    let v = new Vector(Math.PI / 2, Math.PI / 2);
+    let v = new Vector(1/Math.sqrt(2), 1/Math.sqrt(2));
     let v2 = new Vector(-1, 1);
 
     // This is testing a * b = |a||b|cos(theta)
-    expect(equalN(v.dot(v2), 0));
-    expect(equalN(v.dot(new Vector(1, 0)), Math.PI / 4))
+    expect(equalN(v.dot(v2), 0)).toBeTruthy();
+    expect(equalN(v.dot(new Vector(1, 0)), 1/Math.sqrt(2))).toBeTruthy()
 });
 
 test("normalize", () => {
     let v = new Vector( 5, 0);
     v.normalize();
-    expect(equalV(v, new Vector(1, 0)));
+    expect(equalV(v, new Vector(1, 0))).toBeTruthy();
 
-    v = new Vector(Math.PI / 2, Math.PI / 2);
+    v = new Vector(1/Math.sqrt(2), 1/Math.sqrt(2));
+    let copy = v.copy();
     v.normalize();
-    expect(equalV(v, new Vector(Math.PI / 2, Math.PI / 2)));
+    expect(equalV(v, copy)).toBeTruthy();
 
     v = new Vector(1, Math.sqrt(3));
     v.normalize();
-    expect(equalV(v, new Vector(1/2, Math.sqrt(3) / 2)));
+    expect(equalV(v, new Vector(1/2, Math.sqrt(3) / 2))).toBeTruthy();
 });

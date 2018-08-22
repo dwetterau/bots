@@ -6,13 +6,16 @@ export function discToDiscContact(o1: Disc, o2: Disc): Array<ContactData> {
     midline.sub(o2.position);
 
     let distance = midline.magnitude();
-    if (distance == 0 || distance >= o1.radius + o2.radius) {
+    if (distance == 0) {
+        throw Error("can't resolve disc contact with perfect overlap")
+    }
+    if (distance >= o1.radius + o2.radius) {
         return []
     }
 
     let normal = midline.scale(1 / distance);
-    let contactPoint = o1.position.copy();
-    contactPoint.add(midline.scale(.5));
+    let contactPoint = o2.position.copy();
+    contactPoint.add(normal.scale(o2.radius));
     let penetration = o1.radius + o2.radius - distance;
     return [{
         contactNormal: normal,

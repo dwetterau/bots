@@ -35,7 +35,7 @@ test("normalize", () => {
     // 60 degree angle should be preserved
     let x = new Complex(1, Math.sqrt(3));
     x.normalize();
-    expect(equalC(x, new Complex(1/2, 1/2 * Math.sqrt(3))));
+    expect(equalC(x, new Complex(1/2, 1/2 * Math.sqrt(3)))).toBeTruthy();
 });
 
 test("theta", () => {
