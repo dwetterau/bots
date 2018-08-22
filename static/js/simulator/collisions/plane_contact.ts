@@ -12,7 +12,7 @@ export function planeToDiscContact(plane: Plane, disc: Disc): Array<ContactData>
     }
 
     let point = disc.position.copy();
-    point.sub(plane.normal.scale(distance + disc.radius));
+    point.sub(plane.normal.scale(disc.radius));
     let contactNormal = plane.normal.copy();
     contactNormal.reverse();
     return [{
