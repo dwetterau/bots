@@ -66,7 +66,7 @@ export class Disc extends WorldObject {
     translateLocalPoint(localPoint: Vector): Vector {
         let realWorldPoint = localPoint.copy();
         realWorldPoint = Matrix.fromRotation(this.rotation).transform(realWorldPoint);
-        realWorldPoint.add(this.position);
+        realWorldPoint.addInPlace(this.position);
         return realWorldPoint;
     }
 

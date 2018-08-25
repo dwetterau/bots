@@ -42,15 +42,15 @@ class PreparedContact {
             this.contact.data.contactPoint.copy(),
             this.contact.data.contactPoint.copy(),
         ];
-        this.relativeContactPosition[0].sub(world.idToObject[contact.object1Id].position);
-        this.relativeContactPosition[1].sub(world.idToObject[contact.object2Id].position);
+        this.relativeContactPosition[0].subInPlace(world.idToObject[contact.object1Id].position);
+        this.relativeContactPosition[1].subInPlace(world.idToObject[contact.object2Id].position);
 
         this.contactVelocity = this.calculateLocalVelocity(
             0,
             world.idToObject[contact.object1Id],
             duration,
         );
-        this.contactVelocity.sub(this.calculateLocalVelocity(
+        this.contactVelocity.subInPlace(this.calculateLocalVelocity(
             1,
             world.idToObject[contact.object2Id],
             duration,
@@ -73,7 +73,7 @@ class PreparedContact {
 
         // We clear out all acceleration in the direction of the contact
         accelerationVelocity.a = 0;
-        contactVelocity.add(accelerationVelocity);
+        contactVelocity.addInPlace(accelerationVelocity);
 
         return contactVelocity;
     }
@@ -131,7 +131,7 @@ class PreparedContact {
 
             // Limit the angular move to avoid too large of angular moves
             let projection = this.relativeContactPosition[i].copy();
-            projection.add(
+            projection.addInPlace(
                 this.contact.data.contactNormal.scale(
                     -this.relativeContactPosition[i].dot(this.contact.data.contactNormal)
                 )
@@ -158,7 +158,7 @@ class PreparedContact {
             linearChanges[i] = this.contact.data.contactNormal.scale(linearMove[i]);
 
             // Apply the actual movements
-            o.position.add(linearChanges[i]);
+            o.position.addInPlace(linearChanges[i]);
             o.setRotation(angularChanges[i]);
         }
 
@@ -195,12 +195,12 @@ class PreparedContact {
 
             let signedImpulse = impulse.scale(o.inverseMass());
             if (i == 1) {
-                signedImpulse.reverse();
+                signedImpulse.reverseInPlace();
             }
-            velocityChanges[i].add(signedImpulse);
+            velocityChanges[i].addInPlace(signedImpulse);
 
             // Actually apply the changes to the object
-            o.velocity.add(velocityChanges[i]);
+            o.velocity.addInPlace(velocityChanges[i]);
             o.angularVelocity += angularVelocityChanges[i];
         }
         return {
@@ -257,7 +257,7 @@ class PreparedContact {
                 ).scale(rotationPerUnitImpulse);
 
                 // Add in the linear component too
-                velocityPerUnitImpulse.add(worldImpulseDirection.scale(o.inverseMass()));
+                velocityPerUnitImpulse.addInPlace(worldImpulseDirection.scale(o.inverseMass()));
                 velocityPerUnitImpulse = this.contactToWorld
                     .transformTranspose(velocityPerUnitImpulse);
                 return velocityPerUnitImpulse
@@ -273,7 +273,7 @@ class PreparedContact {
 
         let velocityPerUnitImpulseContact = new Vector(0, 0);
         for (let f of impulseUnitToContactVelocityFunctions) {
-            velocityPerUnitImpulseContact.add(f(impulseDirection));
+            velocityPerUnitImpulseContact.addInPlace(f(impulseDirection));
         }
         let scale = this.desiredDeltaVelocity / velocityPerUnitImpulseContact.a;
         let impulseContact = velocityPerUnitImpulseContact.copy();
@@ -362,14 +362,14 @@ export class ContactResolver {
 
                         if (thisObjectId == resolvedObjectId) {
                             let deltaPosition = positionChangeInfo.linearChanges[d].copy();
-                            deltaPosition.add(
+                            deltaPosition.addInPlace(
                                 Matrix.fromRotation(
                                     Complex.fromRotation(positionChangeInfo.angularChanges[d]),
                                 ).transform(
                                     c.relativeContactPosition[b]
                                 )
                             );
-                            deltaPosition.sub(c.relativeContactPosition[b]);
+                            deltaPosition.subInPlace(c.relativeContactPosition[b]);
                             let sign = b == 1 ? 1 : -1;
                             c.contact.data.penetration +=
                                 sign * (deltaPosition.dot(c.contact.data.contactNormal));
@@ -420,7 +420,7 @@ export class ContactResolver {
 
                         if (thisObjectId == resolvedObjectId) {
                             let deltaV = velocityChangeInfo.velocityChanges[d].copy();
-                            deltaV.add(
+                            deltaV.addInPlace(
                                 new Vector(
                                     -c.relativeContactPosition[b].b,
                                     c.relativeContactPosition[b].a,
@@ -428,9 +428,9 @@ export class ContactResolver {
                             );
                             let signedDeltaV = c.contactToWorld.transformTranspose(deltaV);
                             if (b == 1) {
-                                signedDeltaV.reverse()
+                                signedDeltaV.reverseInPlace()
                             }
-                            c.contactVelocity.add(signedDeltaV);
+                            c.contactVelocity.addInPlace(signedDeltaV);
                             c.desiredDeltaVelocity =
                                 c.calculateDesiredDeltaVelocity(this.world, duration);
                         }

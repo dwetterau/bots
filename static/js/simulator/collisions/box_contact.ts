@@ -25,7 +25,7 @@ export function boxToDiscContact(box: Box, disc: Disc): Array<ContactData> {
     closestPoint.b = dist;
 
     let contactNormal = closestPoint.copy();
-    contactNormal.sub(localCenterPoint);
+    contactNormal.subInPlace(localCenterPoint);
 
     dist = contactNormal.squareMagnitude();
     if (dist > disc.radius * disc.radius) {
@@ -34,7 +34,7 @@ export function boxToDiscContact(box: Box, disc: Disc): Array<ContactData> {
 
     let contactPoint = box.translateLocalPoint(closestPoint);
     contactNormal = contactPoint.copy();
-    contactNormal.sub(disc.position);
+    contactNormal.subInPlace(disc.position);
     contactNormal.normalize();
     return [{
         contactNormal,
@@ -53,9 +53,27 @@ function penetrationOnAxis(box1: Box, box2: Box, axis: Vector, toCenter: Vector)
     return projection1 + projection2 - distance;
 }
 
+// Returns the normal and the contactPoint for the collision with the other box.
+let computeContactPoint = function(box: Box, toEdgeBox: Vector): Vector {
+    // This originally used the normal to figure this out, but I don't think that
+    // has enough information to properly decide which point is actually in contact.
+    //
+    // This may only be a problem for test scenarios where things are perfectly aligned.
+    //
+    // Instead, we'll use the vector between the boxes to determine which is the closest point.
+    let vertex = new Vector(box.halfX, box.halfY);
+    if (box.getAxis(0).dot(toEdgeBox) < 0) {
+        vertex.a = -vertex.a
+    }
+    if (box.getAxis(1).dot(toEdgeBox) < 0) {
+        vertex.b = -vertex.b
+    }
+    return box.translateLocalPoint(vertex);
+};
+
 export function boxToBoxContact(box1: Box, box2: Box): Array<ContactData> {
     let toCenter = box2.position.copy();
-    toCenter.sub(box1.position);
+    toCenter.subInPlace(box1.position);
 
     // Try all axises
     let axises = [
@@ -78,34 +96,33 @@ export function boxToBoxContact(box1: Box, box2: Box): Array<ContactData> {
         }
     }
 
-    // Returns the normal and the contactPoint for the collision with the other box.
-    let getNormalAndContactPoint = function(box: Box, toCenter: Vector): [Vector, Vector] {
-        let normal = axises[bestIndex].copy();
-        if (normal.dot(toCenter) > 0) {
-            normal.reverse();
-        }
-
-        let vertex = new Vector(box.halfX, box.halfY);
-        if (box.getAxis(0).dot(normal) < 0) {
-            vertex.a = -vertex.a
-        }
-        if (box.getAxis(1).dot(normal) < 0) {
-            vertex.b = -vertex.b
-        }
-        return [normal, box.translateLocalPoint(vertex)];
-    };
-
     let contactPoint = new Vector(0, 0);
-    let contactNormal = new Vector(0, 0);
+
+    // toCenter originally always points from box1 -> box2
+    // This ensures that toCenter is always pointing to the box with the edge in the
+    // edge, vertex collision pair. This also means it's pointing away from the box with
+    // the vertex, which is useful for determining the contact point.
     if (bestIndex <= 1) {
-        [contactNormal, contactPoint] = getNormalAndContactPoint(box2, toCenter)
+        toCenter.reverseInPlace();
+    }
+
+    // This computes the normal which is the same as the axis that we found the "best" penetration
+    // with ("best" here means smallest). The conditional ensures that we're picking the proper
+    // face, namely the one in the direction of the box with the vertex.
+    // The value of the contactNormal feels a little backwards, but it's because we want to flip
+    // the value of the face's normal (since the contact is pointing into the face).
+    let contactNormal = axises[bestIndex];
+    if (contactNormal.dot(toCenter.reverse()) > 0) {
+        contactNormal.reverseInPlace();
+    }
+
+    if (bestIndex <= 1) {
+        contactPoint = computeContactPoint(box2, toCenter)
     } else {
-        // Reverse the toCenter vector
-        toCenter.reverse();
-        [contactNormal, contactPoint] = getNormalAndContactPoint(box1, toCenter);
+        contactPoint = computeContactPoint(box1, toCenter);
         // We need to flip the normal again because of the ordering imposed
         // by the detector;
-        contactNormal.reverse();
+        contactNormal.reverseInPlace();
     }
 
     return [{

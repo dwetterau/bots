@@ -26,7 +26,7 @@ export class Joint {
         let realWorldP2 = this.o2.translateLocalPoint(this.p2);
 
         let displacement = realWorldP2.copy();
-        displacement.sub(realWorldP1);
+        displacement.subInPlace(realWorldP1);
         return [displacement, realWorldP1]
     }
 

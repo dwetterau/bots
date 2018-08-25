@@ -12,9 +12,9 @@ export function planeToDiscContact(plane: Plane, disc: Disc): Array<ContactData>
     }
 
     let point = disc.position.copy();
-    point.sub(plane.normal.scale(disc.radius));
+    point.subInPlace(plane.normal.scale(disc.radius));
     let contactNormal = plane.normal.copy();
-    contactNormal.reverse();
+    contactNormal.reverseInPlace();
     return [{
         contactNormal: contactNormal,
         contactPoint: point,
@@ -36,7 +36,7 @@ export function planeToBoxContact(plane: Plane, box: Box): Array<ContactData> {
     let contacts: Array<ContactData> = [];
     for (let point of realWorldPoints) {
         let contactNormal = plane.normal.copy();
-        contactNormal.reverse();
+        contactNormal.reverseInPlace();
 
         // See if the point is penetrating the plane
         let distance = plane.normal.dot(point) - plane.offset;
@@ -47,7 +47,7 @@ export function planeToBoxContact(plane: Plane, box: Box): Array<ContactData> {
 
         let contactPoint = plane.normal.copy();
         contactPoint.scaleInPlace(-distance / 2);
-        contactPoint.add(point);
+        contactPoint.addInPlace(point);
 
         contacts.push({
             contactNormal: contactNormal,

@@ -48,9 +48,8 @@ export class Box extends WorldObject {
     }
 
     getAxis(index: number): Vector {
-        let axis = Matrix.fromRotation(this.rotation).transform(new Vector(1 - index, index));
-        axis.normalize();
-        return axis;
+        return Matrix.fromRotation(this.rotation)
+            .transform(new Vector(1 - index, index));
     }
 
     translateRealWorldPoint(realWorldPoint: Vector): Vector {
@@ -63,7 +62,7 @@ export class Box extends WorldObject {
     translateLocalPoint(localPoint: Vector): Vector {
         let realWorldPoint = localPoint.copy();
         realWorldPoint = Matrix.fromRotation(this.rotation).transform(realWorldPoint);
-        realWorldPoint.add(this.position);
+        realWorldPoint.addInPlace(this.position);
         return realWorldPoint;
     }
 

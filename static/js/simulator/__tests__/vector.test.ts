@@ -12,9 +12,9 @@ test("add and subtract", () => {
     let v2 = new Vector(2, 4);
     expect(equalV(v, v2)).toBeFalsy();
 
-    v.add(v);
+    v.addInPlace(v);
     expect(v).toEqual(v2);
-    v.sub(orig);
+    v.subInPlace(orig);
     expect(v).toEqual(orig);
 });
 

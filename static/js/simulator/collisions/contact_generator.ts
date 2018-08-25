@@ -73,7 +73,7 @@ export class ContactGenerator {
         return (o1: WorldObject, o2: WorldObject) => {
             let contactData = f(o2, o1);
             for (let i in contactData) {
-                contactData[i].contactNormal.reverse();
+                contactData[i].contactNormal.reverseInPlace();
             }
             return contactData
         };

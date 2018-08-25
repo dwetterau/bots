@@ -29,7 +29,7 @@ export class Spring {
         let realWorldP2 = this.o2.translateLocalPoint(this.p2);
 
         let displacement = realWorldP2.copy();
-        displacement.sub(realWorldP1);
+        displacement.subInPlace(realWorldP1);
         let x = displacement.magnitude() - this.l;
 
         if (x == -this.l) {
@@ -40,7 +40,7 @@ export class Spring {
         displacement.normalize();
         displacement.scaleInPlace(this.k * x);
         this.o1.accumulateForce(displacement, realWorldP1);
-        displacement.reverse();
+        displacement.reverseInPlace();
         this.o2.accumulateForce(displacement, realWorldP2);
     }
 

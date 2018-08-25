@@ -3,7 +3,7 @@ import {Disc} from "../objects/disc";
 
 export function discToDiscContact(o1: Disc, o2: Disc): Array<ContactData> {
     let midline = o1.position.copy();
-    midline.sub(o2.position);
+    midline.subInPlace(o2.position);
 
     let distance = midline.magnitude();
     if (distance == 0) {
@@ -15,7 +15,7 @@ export function discToDiscContact(o1: Disc, o2: Disc): Array<ContactData> {
 
     let normal = midline.scale(1 / distance);
     let contactPoint = o2.position.copy();
-    contactPoint.add(normal.scale(o2.radius));
+    contactPoint.addInPlace(normal.scale(o2.radius));
     let penetration = o1.radius + o2.radius - distance;
     return [{
         contactNormal: normal,

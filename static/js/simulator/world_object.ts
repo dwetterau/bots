@@ -57,7 +57,7 @@ export class WorldObject {
     accumulateForce(f: Vector, realWorldPoint: Vector) {
         // TODO(davidw): Think about this more, I think we only want to add some
         // component of the force (the portion that goes through the center of mass?)
-        this.forceAccumulator.add(f);
+        this.forceAccumulator.addInPlace(f);
 
         // Translate the realWorldPoint into a point relative to the center of mass
         let centerOfMassPoint = new Vector(
@@ -69,17 +69,17 @@ export class WorldObject {
     }
 
     updatePosition(dt: number) {
-        this.position.add(this.velocity.scale(dt));
+        this.position.addInPlace(this.velocity.scale(dt));
     }
 
     updateVelocity(dt: number) {
-        this.velocity.add(this.acceleration.scale(dt));
+        this.velocity.addInPlace(this.acceleration.scale(dt));
     }
 
     setAcceleration() {
         // a = F/m.
         this.lastFrameAcceleration = this.acceleration.copy();
-        this.lastFrameAcceleration.add(this.forceAccumulator.scale(this.inverseMass()));
+        this.lastFrameAcceleration.addInPlace(this.forceAccumulator.scale(this.inverseMass()));
 
         this.acceleration = this.forceAccumulator.scale(this.inverseMass());
     }
@@ -115,14 +115,14 @@ export class WorldObject {
     velocityAtPoint(localPoint: Vector): Vector {
         let v = this.velocity.copy();
 
-        // Now add in the angular component
+        // Now addInPlace in the angular component
         let tangent = new Vector(
             -localPoint.b,
             localPoint.a,
         );
         tangent.normalize();
         tangent.scaleInPlace(this.angularVelocity * localPoint.magnitude());
-        v.add(tangent);
+        v.addInPlace(tangent);
         return v;
     }
 

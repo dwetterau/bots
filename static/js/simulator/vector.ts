@@ -13,12 +13,12 @@ export class Vector {
         return new Vector(this.a, this.b);
     }
 
-    add(v: Vector): void {
+    addInPlace(v: Vector): void {
         this.a += v.a;
         this.b += v.b;
     }
 
-    sub(v: Vector):  void{
+    subInPlace(v: Vector):  void{
         this.a -= v.a;
         this.b -= v.b;
     }
@@ -50,9 +50,13 @@ export class Vector {
         this.b /= mag;
     }
 
-    reverse(): void {
+    reverseInPlace(): void {
         this.a = -this.a;
         this.b = -this.b;
+    }
+
+    reverse(): Vector {
+        return this.scale(-1);
     }
 
     scaleInPlace(n: number): void {

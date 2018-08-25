@@ -31,7 +31,7 @@ export class Plane extends WorldObject {
             renderingInfo.getY(this.position.b + normToLeft.b),
         );
 
-        normToLeft.reverse();
+        normToLeft.reverseInPlace();
         ctx.lineTo(
             renderingInfo.getX(this.position.a + normToLeft.a),
             renderingInfo.getY(this.position.b + normToLeft.b),
