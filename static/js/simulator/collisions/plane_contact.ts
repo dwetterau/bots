@@ -44,14 +44,9 @@ export function planeToBoxContact(plane: Plane, box: Box): Array<ContactData> {
         if (distance >= 0) {
             continue
         }
-
-        let contactPoint = plane.normal.copy();
-        contactPoint.scaleInPlace(-distance / 2);
-        contactPoint.addInPlace(point);
-
         contacts.push({
             contactNormal: contactNormal,
-            contactPoint: contactPoint,
+            contactPoint: point,
             penetration: -distance,
         });
     }

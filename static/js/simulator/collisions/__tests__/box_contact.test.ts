@@ -131,7 +131,7 @@ test("boxToBox overlapping corners", () => {
 
     // We expect the bottom edge of b1 to contact with the top-left corner of b2 &
     // the top edge of b2 to contact with the bottom-right corner of b1.
-    b2 = new Box(new Vector(2, 0),0, 0.5, 0.6);
+    b2 = new Box(new Vector(2, 0), 0, 0.5, 0.6);
     verifyContact(b1, b2, new Vector(0, 1), .1, new Vector(1.5, 0.6), new Vector(2, 0.5));
 
     // We expect the right edge of b1 to contact with the top-left corner of b2 &
@@ -172,7 +172,7 @@ test("boxToBox angled corners into edges", () => {
 
     // Now b2 to the right
     b2.position = new Vector(2.5, 0.5);
-    verifyContactSamePoint(b1, b2, new Vector(-1, 0), pen, new Vector( 2.5 - invSqrt2, 0.5));
+    verifyContactSamePoint(b1, b2, new Vector(-1, 0), pen, new Vector(2.5 - invSqrt2, 0.5));
 
     // Now b2 underneath
     b2.position = new Vector(0.5, -0.5);
