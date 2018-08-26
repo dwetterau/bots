@@ -113,17 +113,13 @@ export class WorldObject {
     }
 
     velocityAtPoint(localPoint: Vector): Vector {
-        let v = this.velocity.copy();
-
-        // Now addInPlace in the angular component
+        // add in the angular component
+        // v = wr
         let tangent = new Vector(
             -localPoint.b,
             localPoint.a,
-        );
-        tangent.normalize();
-        tangent.scaleInPlace(this.angularVelocity * localPoint.magnitude());
-        v.addInPlace(tangent);
-        return v;
+        ).scale(this.angularVelocity);
+        return this.velocity.add(tangent);
     }
 
     inverseMass(): number {

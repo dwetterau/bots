@@ -13,22 +13,28 @@ export class Vector {
         return new Vector(this.a, this.b);
     }
 
+    add(v: Vector): Vector {
+        return new Vector(this.a + v.a, this.b + v.b);
+    }
+
     addInPlace(v: Vector): void {
         this.a += v.a;
         this.b += v.b;
     }
 
-    subInPlace(v: Vector):  void{
+    subInPlace(v: Vector): void {
         this.a -= v.a;
         this.b -= v.b;
+    }
+
+    sub(v: Vector): Vector {
+        return new Vector(this.a - v.a, this.b - v.b);
     }
 
     dot(v: Vector): number {
         return this.a * v.a + this.b * v.b;
     }
 
-    // TODO: Remove this function
-    // DEPRECATED: Remove this function
     cross(v: Vector): number {
         return this.a * v.b - this.b * v.a;
     }

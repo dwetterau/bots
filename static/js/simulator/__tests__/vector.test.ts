@@ -41,3 +41,10 @@ test("normalize", () => {
     v.normalize();
     expect(equalV(v, new Vector(1/2, Math.sqrt(3) / 2))).toBeTruthy();
 });
+
+test("cross", () => {
+    let p = new Vector(2, 3);
+    let f = new Vector(5, 7);
+    expect(equalN(p.cross(f), -1)).toBeTruthy();
+    expect(equalN(f.cross(p), 1)).toBeTruthy();
+});

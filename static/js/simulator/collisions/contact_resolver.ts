@@ -15,6 +15,65 @@ interface VelocityChangeInfo {
     angularVelocityChanges: Array<number>
 }
 
+// TODO: don't expose these, it's just for tests
+// Returns a matrix for converting between contact coordinates and world coordinates.
+// `transform()` on the matrix converts a contact-local vector to a world vector
+// `transformTranspose()` does the opposite.
+// Conceptually, turns the provided normal into the x axis, and the tangent into y.
+export function computeContactToWorld(normal: Vector): Matrix {
+    return new Matrix(normal.a, -normal.b, normal.b, normal.a);
+}
+
+export function calculateContactVelocity(
+    relativeContactPosition: Vector,
+    contactToWorld: Matrix,
+    o: WorldObject,
+    duration: number,
+): Vector {
+    let velocity = o.velocityAtPoint(relativeContactPosition);
+    return contactToWorld.transformTranspose(velocity);
+
+    /*
+    let accelerationVelocity = this.contactToWorld.transformTranspose(
+        o.lastFrameAcceleration.scale(duration)
+    );
+
+    // We clear out all acceleration in the direction of the contact
+    accelerationVelocity.a = 0;
+    contactVelocity.addInPlace(accelerationVelocity);
+
+    return contactVelocity;
+    */
+}
+
+export function calculateDesiredDeltaVelocity(world: World, contactVelocity: Vector, duration: number) {
+    /*
+    let o1 = world.idToObject[this.contact.object1Id];
+    let o2 = world.idToObject[this.contact.object2Id];
+
+    // This is a later optimization
+    let velocityFromAcceleration = o1.lastFrameAcceleration
+        .scale(duration)
+        .dot(this.contact.data.contactNormal);
+    velocityFromAcceleration -= o2.lastFrameAcceleration
+        .scale(duration)
+        .dot(this.contact.data.contactNormal);
+    */
+
+    // If the velocity is low, we don't consider restitution
+    let restitution = world.Restitution;
+    if (Math.abs(contactVelocity.a) < world.VelocityLimit) {
+        restitution = 0
+    }
+
+    /*
+    return -this.contactVelocity.a
+        - restitution * (this.contactVelocity.a - velocityFromAcceleration)
+    */
+    return -contactVelocity.a * (1 + restitution);
+}
+
+
 class PreparedContact {
     contact: Contact;
 
@@ -36,67 +95,30 @@ class PreparedContact {
 
     constructor(contact: Contact, world: World, duration: number) {
         this.contact = contact;
-        this.contactToWorld = this.computeContactToWorld(contact.data.contactNormal);
+        this.contactToWorld = computeContactToWorld(contact.data.contactNormal);
 
         this.relativeContactPosition = [
-            this.contact.data.contactPoint.copy(),
-            this.contact.data.contactPoint.copy(),
+            this.contact.data.contactPoint.sub(world.idToObject[contact.object1Id].position),
+            this.contact.data.contactPoint.sub(world.idToObject[contact.object2Id].position),
         ];
-        this.relativeContactPosition[0].subInPlace(world.idToObject[contact.object1Id].position);
-        this.relativeContactPosition[1].subInPlace(world.idToObject[contact.object2Id].position);
 
-        this.contactVelocity = this.calculateLocalVelocity(
-            0,
+        this.contactVelocity = calculateContactVelocity(
+            this.relativeContactPosition[0],
+            this.contactToWorld,
             world.idToObject[contact.object1Id],
             duration,
-        );
-        this.contactVelocity.subInPlace(this.calculateLocalVelocity(
-            1,
+        ).sub(calculateContactVelocity(
+            this.relativeContactPosition[1],
+            this.contactToWorld,
             world.idToObject[contact.object2Id],
             duration,
         ));
 
-        this.desiredDeltaVelocity = this.calculateDesiredDeltaVelocity(world, duration);
-    }
-
-    computeContactToWorld(normal: Vector): Matrix {
-        return new Matrix(normal.a, -normal.b, normal.b, normal.a);
-    }
-
-    calculateLocalVelocity(objectIndex: number, o: WorldObject, duration: number): Vector {
-        let velocity = o.velocityAtPoint(this.relativeContactPosition[objectIndex]);
-        let contactVelocity = this.contactToWorld.transformTranspose(velocity);
-
-        let accelerationVelocity = this.contactToWorld.transformTranspose(
-            o.lastFrameAcceleration.scale(duration)
+        this.desiredDeltaVelocity = calculateDesiredDeltaVelocity(
+            world,
+            this.contactVelocity,
+            duration
         );
-
-        // We clear out all acceleration in the direction of the contact
-        accelerationVelocity.a = 0;
-        contactVelocity.addInPlace(accelerationVelocity);
-
-        return contactVelocity;
-    }
-
-    calculateDesiredDeltaVelocity(world: World, duration: number) {
-        let o1 = world.idToObject[this.contact.object1Id];
-        let o2 = world.idToObject[this.contact.object2Id];
-
-        let velocityFromAcceleration = o1.lastFrameAcceleration
-            .scale(duration)
-            .dot(this.contact.data.contactNormal);
-        velocityFromAcceleration -= o2.lastFrameAcceleration
-            .scale(duration)
-            .dot(this.contact.data.contactNormal);
-
-        // If the velocity is low, we don't consider restitution
-        let restitution = world.Restitution;
-        if (Math.abs(this.contactVelocity.a) < world.VelocityLimit) {
-            restitution = 0
-        }
-
-        return -this.contactVelocity.a
-            - restitution * (this.contactVelocity.a - velocityFromAcceleration)
     }
 
     applyPositionChange(world: World, penetration: number): PositionChangeInfo {
@@ -173,9 +195,9 @@ class PreparedContact {
         let angularVelocityChanges = [0, 0];
 
         // TODO(davidw): Switch methods when friction is 0
-        // let impulseContact = this.calculateFrictionlessImpulse(world);
+        let impulseContact = this.calculateFrictionlessImpulse(world);
         // TODO: Switch back when it's right
-        let impulseContact = this.calculateFrictionImpulse(world);
+        // let impulseContact = this.calculateFrictionImpulse(world);
 
         // Transform impulse to world coordinates
         let impulse = this.contactToWorld.transform(impulseContact);
@@ -220,6 +242,12 @@ class PreparedContact {
                 .cross(this.contact.data.contactNormal);
 
             let rotationPerUnitImpulse = torquePerUnitImpulse / o.momentOfInertia();
+            // If we think of rotationPerUnitImpulse as delta w, then we can get delta v
+            // by multiplying by r. We are then assuming the delta v is in the direction
+            // perpendicular to the position of the point (the tangent of the surface where the
+            // contact is). This shorthand also uses the fact that the magnitude of the vector
+            // we choose matches the original (which is also r).
+            // Note: this implementation is similar to velocityAtPoint().
             let velocityPerUnitImpulse = new Vector(
                 -this.relativeContactPosition[i].b,
                 this.relativeContactPosition[i].a,
@@ -228,6 +256,7 @@ class PreparedContact {
             // Convert this back to contact coordinates
             // This is an optimization of simply this.contactToWorld.transformTranspose(vel)
             // since we don't care about non-x directions for frictionless impulse
+            // TODO: Get rid of this step?
             deltaV += velocityPerUnitImpulse.dot(this.contact.data.contactNormal);
 
             deltaV += o.inverseMass()
@@ -432,7 +461,11 @@ export class ContactResolver {
                             }
                             c.contactVelocity.addInPlace(signedDeltaV);
                             c.desiredDeltaVelocity =
-                                c.calculateDesiredDeltaVelocity(this.world, duration);
+                                calculateDesiredDeltaVelocity(
+                                    this.world,
+                                    c.contactVelocity,
+                                    duration,
+                                );
                         }
                     }
                 }

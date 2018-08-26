@@ -42,6 +42,7 @@ export class Weapon {
 
         // Spawn a new projectile
         let r = this.localRotation.rotate(this.object.rotation);
+        r.normalize();
         return new Projectile(
             this.object.translateLocalPoint(this.localPosition),
             r,

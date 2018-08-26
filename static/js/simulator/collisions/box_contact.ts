@@ -33,8 +33,7 @@ export function boxToDiscContact(box: Box, disc: Disc): Array<ContactData> {
     }
 
     let contactPoint = box.translateLocalPoint(closestPoint);
-    contactNormal = contactPoint.copy();
-    contactNormal.subInPlace(disc.position);
+    contactNormal = contactPoint.sub(disc.position);
     contactNormal.normalize();
     return [{
         contactNormal,
