@@ -11,7 +11,7 @@ export class World {
 
     // Universal constants
     Gravity = 20;
-    Restitution = .6;
+    Restitution = .4;
     Tolerance = .005;
     VelocityLimit = .25;
     AngularLimit = .2;

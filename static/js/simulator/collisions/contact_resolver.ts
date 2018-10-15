@@ -46,7 +46,11 @@ export function calculateContactVelocity(
     */
 }
 
-export function calculateDesiredDeltaVelocity(world: World, contactVelocity: Vector, duration: number) {
+export function calculateDesiredDeltaVelocity(
+    world: World,
+    contactVelocity: Vector,
+    duration: number,
+): number {
     /*
     let o1 = world.idToObject[this.contact.object1Id];
     let o2 = world.idToObject[this.contact.object2Id];
@@ -74,7 +78,7 @@ export function calculateDesiredDeltaVelocity(world: World, contactVelocity: Vec
 }
 
 
-class PreparedContact {
+export class PreparedContact {
     contact: Contact;
 
     // A matrix that can convert coordinates from the contact frame to the world's frame

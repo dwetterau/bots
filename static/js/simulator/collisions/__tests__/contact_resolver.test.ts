@@ -1,7 +1,14 @@
 import {WorldObject} from "../../world_object";
 import {Vector} from "../../vector";
-import {calculateContactVelocity, computeContactToWorld} from "../contact_resolver";
-import {equalV} from "../../__tests__/helpers";
+import {
+    calculateContactVelocity,
+    calculateDesiredDeltaVelocity,
+    computeContactToWorld, PreparedContact
+} from "../contact_resolver";
+import {equalM, equalN, equalV} from "../../__tests__/helpers";
+import {Contact} from "../contact_generator";
+import {World} from "../../world";
+import {Matrix} from "../../matrix";
 
 test("computeContactToWorld", () => {
     let worldNormal = new Vector(3, 4);
@@ -39,5 +46,42 @@ test("calculateContactVelocity", () => {
 });
 
 test("calculateDesiredDeltaVelocity", () => {
-    // TODO.
+    let mockWorld: any = {
+        Restitution: .4,
+        VelocityLimit: .25,
+    };
+    let v = calculateDesiredDeltaVelocity(mockWorld, new Vector(2, 12), 0.0);
+    expect(equalN(v, -2.8)).toBeTruthy();
+    v = calculateDesiredDeltaVelocity(mockWorld, new Vector(.24, 12), 0.0);
+    expect(equalN(v, -.24)).toBeTruthy();
+});
+
+test("PreparedContact constructor", () => {
+    let o1 = new WorldObject(new Vector(0, 0), 0.0);
+    o1.velocity = new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2));
+    o1.angularVelocity = Math.PI / 4;
+
+    let o2 = new WorldObject(new Vector(1, 0), 0.0);
+    o2.velocity = new Vector(0, 0);
+    o2.angularVelocity = 0;
+
+    let world = new World(0, 0);
+    world.addObject(o1);
+    world.addObject(o2);
+
+    let contact: Contact = {
+        data: {
+            contactPoint: new Vector(0, 0),
+            contactNormal: new Vector(1, 0),
+            penetration: 0,
+        },
+        object1Id: o1.id,
+        object2Id: o2.id,
+    };
+    let p = new PreparedContact(contact, world, 0);
+    expect(equalM(p.contactToWorld, new Matrix(1, 0, 0, 1))).toBeTruthy();
+    expect(equalV(p.relativeContactPosition[0], new Vector(0, 0))).toBeTruthy();
+    expect(equalV(p.relativeContactPosition[1], new Vector(-1, 0))).toBeTruthy();
+    expect(equalV(p.contactVelocity, new Vector(1/Math.sqrt(2), 1/Math.sqrt(2)))).toBeTruthy();
+    expect(equalN(p.desiredDeltaVelocity, -1.4 / Math.sqrt(2)));
 });
