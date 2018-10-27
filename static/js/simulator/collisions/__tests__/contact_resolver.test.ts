@@ -3,12 +3,15 @@ import {Vector} from "../../vector";
 import {
     calculateContactVelocity,
     calculateDesiredDeltaVelocity,
-    computeContactToWorld, PreparedContact
+    computeContactToWorld, ContactResolver, PreparedContact
 } from "../contact_resolver";
 import {equalM, equalN, equalV} from "../../__tests__/helpers";
 import {Contact} from "../contact_generator";
 import {World} from "../../world";
 import {Matrix} from "../../matrix";
+import {Complex} from "../../complex";
+import {Box} from "../../objects/box";
+import {boxToBoxContact} from "../box_contact";
 
 test("computeContactToWorld", () => {
     let worldNormal = new Vector(3, 4);
@@ -84,4 +87,64 @@ test("PreparedContact constructor", () => {
     expect(equalV(p.relativeContactPosition[1], new Vector(-1, 0))).toBeTruthy();
     expect(equalV(p.contactVelocity, new Vector(1/Math.sqrt(2), 1/Math.sqrt(2)))).toBeTruthy();
     expect(equalN(p.desiredDeltaVelocity, -1.4 / Math.sqrt(2)));
+});
+
+test("computePositionChange", () => {
+    let b1 = new Box(new Vector(1, 1), 4, 1, 1);
+
+    // First case is b2 on top in the middle
+    let b2 = new Box(new Vector(1, 2.5), 1, 0.5, 0.5);
+    b2.rotation = Complex.fromRotation(Math.PI / 4);
+    let invSqrt2 = 1 / Math.sqrt(2);
+    let pen = invSqrt2 - 0.5;
+
+    let world = new World(0, 0);
+    world.addObject(b1);
+    world.addObject(b2);
+
+    let contact: Contact = {
+        data: boxToBoxContact(b1, b2)[0],
+        object1Id: b1.id,
+        object2Id: b2.id,
+    };
+    let p = new PreparedContact(contact, world, 0);
+    expect(equalN(p.contact.data.penetration, pen)).toBeTruthy();
+    let {linearChanges, angularChanges} = p.computePositionChange(world);
+    expect(equalN(angularChanges[0], 0)).toBeTruthy();
+    expect(equalN(angularChanges[1], 0)).toBeTruthy();
+    expect(equalN(linearChanges[0].magnitude() + linearChanges[1].magnitude(), pen)).toBeTruthy();
+
+    // Now let's throw some rotation into the mix
+    b2.position = new Vector(1.5, 2.5);
+    contact = {
+        data: boxToBoxContact(b1, b2)[0],
+        object1Id: b1.id,
+        object2Id: b2.id,
+    };
+    p = new PreparedContact(contact, world, 0);
+    expect(equalN(p.contact.data.penetration, pen)).toBeTruthy();
+    let res = p.computePositionChange(world);
+    // Linear changes on their own are not enough
+    expect(res.linearChanges[0].magnitude() + res.linearChanges[1].magnitude() < pen).toBeTruthy();
+    // Should rotate the bottom square in response to the contact
+    expect(res.angularChanges[0] < 0).toBeTruthy();
+    expect(equalN(res.angularChanges[1], 0)).toBeTruthy();
+
+    // They should be less in contact, but not out of contact because the added rotation will cause
+    // them to contact again.
+    let resolver = new ContactResolver(world);
+    resolver.applyPositionChange(world, contact, res);
+    contact.data = boxToBoxContact(b1, b2)[0];
+    expect(contact.data.penetration < pen).toBeTruthy();
+
+    // Another resolution should fix it
+    p = new PreparedContact(contact, world, 0);
+    res = p.computePositionChange(world);
+    resolver.applyPositionChange(world, contact, res);
+    expect(boxToBoxContact(b1, b2)[0].penetration < world.Tolerance).toBeTruthy();
+});
+
+
+test("adjustPositions", () => {
+    // TODO: next time
 });

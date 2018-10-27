@@ -125,7 +125,7 @@ export class PreparedContact {
         );
     }
 
-    applyPositionChange(world: World, penetration: number): PositionChangeInfo {
+    computePositionChange(world: World): PositionChangeInfo {
         let linearChanges: Array<Vector> = [new Vector(0, 0), new Vector(0, 0)];
         let angularChanges: Array<number> = [0, 0];
 
@@ -143,17 +143,15 @@ export class PreparedContact {
 
         for (let [i, o] of objects.entries()) {
             linearInertia[i] = o.inverseMass();
-            angularInertia[i] = Math.abs(
-                this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
-                / o.momentOfInertia()
-            );
+            angularInertia[i] = 1 / o.momentOfInertia();
             totalInertia += linearInertia[i] + angularInertia[i];
         }
+        let penetration = this.contact.data.penetration;
 
-        for (let [i, o] of objects.entries()) {
+        for (let i of [0, 1]) {
             let sign = i == 0 ? 1 : -1;
-            angularMove[i] = sign * penetration * (angularInertia[i] / totalInertia);
             linearMove[i] = sign * penetration * (linearInertia[i] / totalInertia);
+            angularMove[i] = sign * penetration * (angularInertia[i] / totalInertia);
 
             // Limit the angular move to avoid too large of angular moves
             let projection = this.relativeContactPosition[i].copy();
@@ -175,17 +173,10 @@ export class PreparedContact {
             }
 
             // Calculate the rotation needed to obtain the angular move
-            // TODO(davidw): Should this take the inertia into account again?
-            angularChanges[i] = Math.atan(
-                angularMove[i] / this.relativeContactPosition[i].magnitude()
-            );
-
+            angularChanges[i] = this.relativeContactPosition[i].cross(this.contact.data.contactNormal)
+                * angularInertia[i] * angularMove[i];
             // Calculate the linear component
             linearChanges[i] = this.contact.data.contactNormal.scale(linearMove[i]);
-
-            // Apply the actual movements
-            o.position.addInPlace(linearChanges[i]);
-            o.setRotation(angularChanges[i]);
         }
 
         return {
@@ -199,9 +190,9 @@ export class PreparedContact {
         let angularVelocityChanges = [0, 0];
 
         // TODO(davidw): Switch methods when friction is 0
-        let impulseContact = this.calculateFrictionlessImpulse(world);
+        //let impulseContact = this.calculateFrictionlessImpulse(world);
         // TODO: Switch back when it's right
-        // let impulseContact = this.calculateFrictionImpulse(world);
+        let impulseContact = this.calculateFrictionImpulse(world);
 
         // Transform impulse to world coordinates
         let impulse = this.contactToWorld.transform(impulseContact);
@@ -356,6 +347,15 @@ export class ContactResolver {
         return preparedContacts
     }
 
+    applyPositionChange(world: World, contact: Contact, positionChangeInfo) {
+        for (let i of [0, 1]) {
+            let id = (i == 0) ? contact.object1Id: contact.object2Id;
+            let o = this.world.idToObject[id];
+            o.position.addInPlace(positionChangeInfo.linearChanges[i]);
+            o.setRotation(positionChangeInfo.angularChanges[i]);
+        }
+    }
+
     adjustPositions(contacts: Array<PreparedContact>) {
         let iteration = 0;
         while (iteration++ < this.maxPositionIterations) {
@@ -375,9 +375,13 @@ export class ContactResolver {
 
             // Resolve the penetration
             let positionChangeInfo = contacts[maxIndex]
-                .applyPositionChange(this.world, maxPenetration);
+                .computePositionChange(this.world);
 
-            // Resolve all of the penetrations of the other objects
+            // Apply the actual movements
+            this.applyPositionChange(this.world, contacts[maxIndex].contact, positionChangeInfo);
+
+            // Resolve all of the penetrations of the other contacts involving these
+            // objects.
             for (let c of contacts) {
                 for (let b of [0, 1]) {
                     let thisObjectId = c.contact.object1Id;
